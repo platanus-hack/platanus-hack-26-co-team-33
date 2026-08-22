@@ -5,81 +5,92 @@ import { generate } from 'mppx/discovery'
 import { creditReceipt } from './charge.js'
 import { env } from './env.js'
 import { mppx } from './mpp.js'
+import { proxyToOrigin } from './proxy.js'
+import { matchRoute } from './router.js'
 import { store } from './store.js'
 
 const app = new Hono()
 
 app.get('/health', (c) => c.json({ ok: true, network: env.testnet ? 'testnet' : 'mainnet' }))
 
-const DEMO_PRICE = '0.05'
+/**
+ * Discovery MPP por tenant. Un agente lee esto y sabe qué rutas cobran
+ * y cuánto, sin tener que provocar un 402 primero.
+ */
+app.get('/:slug/openapi.json', async (c) => {
+  const slug = c.req.param('slug')
+  const tenant = await store.getTenantBySlug(slug)
+  if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
+
+  const routes = await store.listRoutes(tenant.id)
+  return c.json(
+    generate(mppx, {
+      info: { title: `${tenant.name} · Peaje`, version: '1.0.0' },
+      routes: routes.map((route) => ({
+        intent: 'charge',
+        method: route.method,
+        path: `/${tenant.slug}${route.pathPattern}`,
+        options: {
+          amount: route.priceUsd,
+          currency: env.currency,
+          decimals: TOKEN_DECIMALS,
+          recipient: env.treasuryAddress,
+          description: route.description ?? `${route.method} ${route.pathPattern}`,
+        },
+        summary: route.description ?? undefined,
+      })),
+    }),
+  )
+})
+
+/** Ledger interno del tenant. Lo consume el dashboard. */
+app.get('/_internal/:slug/ledger', async (c) => {
+  const tenant = await store.getTenantBySlug(c.req.param('slug'))
+  if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
+  const payments = await store.listPayments(tenant.id)
+  return c.json({
+    balance: await store.balance(tenant.id),
+    payments: payments.map((p) => ({ ...p, explorer: txExplorerUrl(p.receiptRef, env.testnet) })),
+  })
+})
 
 /**
- * M1: un endpoint pago hardcodeado. Cobra 0.05 y sirve el recurso del origin.
- * M2 reemplaza esto por resolución multi-tenant `/:slug/*` con precios de la DB.
+ * Gateway multi-tenant: `/{slug}/<lo que sea>`.
+ *
+ * Resuelve el tenant por slug, busca si el path tiene precio configurado.
+ * Con precio: cobra por MPP y recién ahí llama al origin. Sin precio:
+ * pasa derecho, gratis. El tenant decide qué cobra desde el dashboard.
  */
-app.get('/demo/data', async (c) => {
+app.all('/:slug/*', async (c) => {
+  const slug = c.req.param('slug')
+  const tenant = await store.getTenantBySlug(slug)
+  if (!tenant) return c.json({ error: `Tenant "${slug}" no encontrado` }, 404)
+
+  const url = new URL(c.req.url)
+  const path = url.pathname.slice(`/${slug}`.length) || '/'
+  const routes = await store.listRoutes(tenant.id)
+  const match = matchRoute(routes, c.req.method, path)
+
+  if (!match) return proxyToOrigin(c.req.raw, tenant, path)
+
   const result = await mppx.charge({
-    amount: DEMO_PRICE,
-    description: 'Datos demo',
+    amount: match.route.priceUsd,
+    description: match.route.description ?? `${tenant.name} · ${path}`,
   })(c.req.raw)
 
   if (result.status === 402) return result.challenge
 
-  const upstream = await fetch(`${env.demoOrigin}/1024/1024`)
-  const sealed = result.withReceipt(
-    Response.json({
-      source: 'demo',
-      url: upstream.url,
-      servedAt: new Date().toISOString(),
-    }),
-  )
+  const upstream = await proxyToOrigin(c.req.raw, tenant, path)
+  const sealed = result.withReceipt(upstream)
 
   await creditReceipt(sealed, {
-    tenantId: 'demo',
-    routeId: null,
-    path: new URL(c.req.url).pathname,
-    priceUsd: DEMO_PRICE,
+    tenantId: tenant.id,
+    routeId: match.route.id,
+    path,
+    priceUsd: match.route.priceUsd,
   })
 
   return sealed
-})
-
-/**
- * Documento de discovery MPP. Los clientes y agentes lo leen para saber
- * qué rutas cobran y cuánto, sin tener que provocar un 402 primero.
- * En M2 las rutas salen de la DB por tenant.
- */
-app.get('/openapi.json', (c) =>
-  c.json(
-    generate(mppx, {
-      info: { title: 'Agentic Finance Gateway', version: '0.1.0' },
-      routes: [
-        {
-          intent: 'charge',
-          method: 'GET',
-          path: '/demo/data',
-          options: {
-            amount: DEMO_PRICE,
-            currency: env.currency,
-            decimals: TOKEN_DECIMALS,
-            recipient: env.treasuryAddress,
-            description: 'Datos demo',
-          },
-          summary: 'Datos demo',
-        },
-      ],
-    }),
-  ),
-)
-
-/** Ledger interno: verifica que el Receipt quedó acreditado al tenant. */
-app.get('/_debug/payments', async (c) => {
-  const tenantId = c.req.query('tenant') ?? 'demo'
-  const payments = await store.listPayments(tenantId)
-  return c.json({
-    balance: await store.balance(tenantId),
-    payments: payments.map((p) => ({ ...p, explorer: txExplorerUrl(p.receiptRef, env.testnet) })),
-  })
 })
 
 serve({ fetch: app.fetch, port: env.port }, (info) => {

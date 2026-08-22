@@ -8,7 +8,7 @@ import type {
   Tenant,
   Withdrawal,
   WithdrawalStatus,
-} from './types.js'
+} from './types'
 
 /**
  * Store en memoria. Corre el gateway y el dashboard sin Supabase, con la misma

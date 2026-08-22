@@ -10,12 +10,9 @@ export type ChargeContext = {
 }
 
 /**
- * Toma la respuesta ya sellada con `Payment-Receipt` y acredita el pago
- * al tenant en el ledger interno.
- *
- * Se hace acá (y no en el hook `onPaymentSuccess` del SDK) porque este scope
- * es el único que conoce el tenant, la ruta y el precio en decimal: el Receipt
- * solo trae método, referencia y timestamp.
+ * Lee el `Payment-Receipt` de la respuesta ya sellada y acredita el pago
+ * al tenant. Se hace acá porque este scope es el único que conoce tenant,
+ * ruta y precio decimal: el Receipt solo trae método, referencia y timestamp.
  */
 export async function creditReceipt(response: Response, ctx: ChargeContext): Promise<void> {
   const header = response.headers.get('Payment-Receipt')
@@ -44,6 +41,6 @@ export async function creditReceipt(response: Response, ctx: ChargeContext): Pro
 
   // La wallet del agente sale de la tx on-chain; no bloqueamos la respuesta por eso.
   void resolvePayer(receipt.reference).then((wallet) => {
-    if (wallet) void store.setPaymentWallet(payment.id, wallet)
+    if (wallet) void store.setPaymentWallet(payment.id, wallet).catch(() => {})
   })
 }

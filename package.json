@@ -5,11 +5,14 @@
   "packageManager": "pnpm@11.7.0",
   "scripts": {
     "dev:gateway": "pnpm --filter @peaje/gateway dev",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "seed": "tsx --env-file=.env scripts/seed.mts"
   },
   "devDependencies": {
     "tsx": "^4.23.12",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@peaje/db": "workspace:*",
+    "@peaje/shared": "workspace:*"
   },
   "dependencies": {
     "viem": "^2.55.19"

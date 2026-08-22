@@ -47,3 +47,46 @@ export function formatAmount(amount: number | string): string {
   const fixed = n.toFixed(TOKEN_DECIMALS)
   return fixed.includes('.') ? fixed.replace(/0+$/, '').replace(/\.$/, '') : fixed
 }
+
+// ---- credenciales de tenant ----
+
+const KEY_PREFIX = 'peaje_live_'
+
+function toHex(bytes: Uint8Array): string {
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function randomHex(bytes: number): string {
+  return toHex(crypto.getRandomValues(new Uint8Array(bytes)))
+}
+
+/** Genera un API key. Se muestra una sola vez; en la DB va solo el hash. */
+export function generateApiKey(): string {
+  return `${KEY_PREFIX}${randomHex(24)}`
+}
+
+/** Secreto para firmar los JWT del iframe. Distinto del API key. */
+export function generateEmbedSecret(): string {
+  return randomHex(32)
+}
+
+/** Prefijo visible del key, para que el tenant lo reconozca en el dashboard. */
+export function apiKeyPrefix(key: string): string {
+  return `${key.slice(0, KEY_PREFIX.length + 6)}…`
+}
+
+export async function hashApiKey(key: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key))
+  return toHex(new Uint8Array(digest))
+}
+
+/** Slug URL-safe a partir de un nombre. */
+export function slugify(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
