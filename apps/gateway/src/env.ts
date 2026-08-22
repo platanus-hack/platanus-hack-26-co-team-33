@@ -1,4 +1,4 @@
-import { DEFAULT_CURRENCY } from '@peaje/shared'
+import { DEFAULT_CURRENCY, tempoConfig } from '@peaje/shared'
 
 function required(name: string): string {
   const value = process.env[name]
@@ -14,6 +14,9 @@ export const env = {
   treasuryAddress: required('TREASURY_ADDRESS') as `0x${string}`,
   currency: (process.env.MPP_CURRENCY ?? DEFAULT_CURRENCY) as `0x${string}`,
   testnet: (process.env.TEMPO_NETWORK ?? 'testnet') === 'testnet',
-  /** Origin del endpoint demo de M1. */
-  demoOrigin: process.env.DEMO_ORIGIN ?? 'https://picsum.photos',
+  /** Clave de la treasury. Solo testnet. Firma los retiros. */
+  treasuryPrivateKey: required('TREASURY_PRIVATE_KEY') as `0x${string}`,
+  /** Secreto compartido entre dashboard y gateway para la API interna. */
+  internalSecret: required('INTERNAL_API_SECRET'),
+  rpcUrl: tempoConfig((process.env.TEMPO_NETWORK ?? 'testnet') === 'testnet').rpcUrl,
 }

@@ -8,6 +8,7 @@ import { mppx } from './mpp.js'
 import { proxyToOrigin } from './proxy.js'
 import { matchRoute } from './router.js'
 import { store } from './store.js'
+import { withdrawals } from './withdrawals.js'
 
 const app = new Hono()
 
@@ -42,6 +43,8 @@ app.get('/:slug/openapi.json', async (c) => {
     }),
   )
 })
+
+app.route('/_internal', withdrawals)
 
 /** Ledger interno del tenant. Lo consume el dashboard. */
 app.get('/_internal/:slug/ledger', async (c) => {
