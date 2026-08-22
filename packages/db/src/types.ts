@@ -1,0 +1,103 @@
+export type Tenant = {
+  id: string
+  slug: string
+  name: string
+  apiKeyPrefix: string
+  embedSecret: string
+  originUrl: string
+  payoutWallet: string | null
+  createdAt: string
+}
+
+export type Route = {
+  id: string
+  tenantId: string
+  method: string
+  pathPattern: string
+  priceUsd: string
+  description: string | null
+  active: boolean
+}
+
+export type Payment = {
+  id: string
+  tenantId: string
+  routeId: string | null
+  path: string
+  agentWallet: string | null
+  amount: string
+  receiptRef: string
+  method: string
+  createdAt: string
+}
+
+export type Withdrawal = {
+  id: string
+  tenantId: string
+  amount: string
+  toWallet: string
+  txRef: string | null
+  status: WithdrawalStatus
+  createdAt: string
+}
+
+export type WithdrawalStatus = 'pending' | 'confirmed' | 'failed'
+
+export type Balance = {
+  revenue: string
+  withdrawn: string
+  available: string
+  requestCount: number
+}
+
+export type NewTenant = {
+  slug: string
+  name: string
+  originUrl: string
+  apiKeyHash: string
+  apiKeyPrefix: string
+  embedSecret: string
+  payoutWallet?: string | null
+}
+
+export type NewRoute = {
+  tenantId: string
+  method: string
+  pathPattern: string
+  priceUsd: string
+  description?: string | null
+}
+
+/** Contrato de persistencia. Lo implementan MemoryStore y SupabaseStore. */
+export interface Store {
+  // tenants
+  createTenant(input: NewTenant): Promise<Tenant>
+  getTenantBySlug(slug: string): Promise<Tenant | null>
+  getTenantById(id: string): Promise<Tenant | null>
+  getTenantByApiKeyHash(hash: string): Promise<Tenant | null>
+  listTenants(): Promise<Tenant[]>
+  setPayoutWallet(tenantId: string, wallet: string): Promise<void>
+
+  // origins permitidos para el iframe
+  listAllowedOrigins(tenantId: string): Promise<string[]>
+  addAllowedOrigin(tenantId: string, origin: string): Promise<void>
+  removeAllowedOrigin(tenantId: string, origin: string): Promise<void>
+
+  // rutas y precios
+  listRoutes(tenantId: string): Promise<Route[]>
+  createRoute(input: NewRoute): Promise<Route>
+  deleteRoute(tenantId: string, routeId: string): Promise<void>
+
+  // ledger
+  recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment>
+  setPaymentWallet(paymentId: string, wallet: string): Promise<void>
+  listPayments(tenantId: string, limit?: number): Promise<Payment[]>
+  balance(tenantId: string): Promise<Balance>
+  dailyRevenue(tenantId: string, days: number): Promise<{ date: string; amount: string; count: number }[]>
+
+  // retiros
+  createWithdrawal(input: { tenantId: string; amount: string; toWallet: string }): Promise<Withdrawal>
+  updateWithdrawal(id: string, patch: { txRef?: string; status?: WithdrawalStatus }): Promise<Withdrawal>
+  listWithdrawals(tenantId: string, limit?: number): Promise<Withdrawal[]>
+  getWithdrawal(id: string): Promise<Withdrawal | null>
+}

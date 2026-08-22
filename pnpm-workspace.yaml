@@ -1,0 +1,13 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+onlyBuiltDependencies:
+  - esbuild
+
+# mppx se publica varias veces al día (SDK nuevo). Excluido del guard de edad mínima.
+minimumReleaseAgeExclude:
+  - mppx
+
+allowBuilds:
+  esbuild: true

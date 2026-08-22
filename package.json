@@ -1,0 +1,17 @@
+{
+  "name": "peaje",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "dev:gateway": "pnpm --filter @peaje/gateway dev",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "viem": "^2.55.19"
+  }
+}
