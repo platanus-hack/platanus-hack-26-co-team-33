@@ -10,6 +10,7 @@ import { proxyToOrigin } from './proxy.js'
 import { matchRoute } from './router.js'
 import { store } from './store.js'
 import { handleMcpRequest } from './mcp.js'
+import * as wk from './wellknown.js'
 import { withdrawals } from './withdrawals.js'
 
 const app = new Hono<{ Bindings: HttpBindings }>()
@@ -61,6 +62,44 @@ app.get('/_internal/:slug/ledger', async (c) => {
 })
 
 /**
+ * Link headers (RFC 8288) en todas las respuestas de tenant: los agentes
+ * encuentran el discovery sin parsear ni una página.
+ */
+app.use('/:slug/*', async (c, next) => {
+  await next()
+  const slug = c.req.param('slug')
+  const origin = new URL(c.req.url).origin
+  c.res.headers.append(
+    'Link',
+    `<${origin}/${slug}/llms.txt>; rel="describedby", <${origin}/${slug}/.well-known/ai-catalog.json>; rel="ai-catalog", <${origin}/${slug}/openapi.json>; rel="service-desc"`,
+  )
+})
+
+/** Archivos de agent-readiness por tenant. Ver wellknown.ts: cada uno mapea a un check de Ora. */
+const WELL_KNOWN: Record<string, { builder: (ctx: { tenant: Parameters<typeof wk.llmsTxt>[0]['tenant']; routes: Parameters<typeof wk.llmsTxt>[0]['routes']; base: string }) => string | Record<string, unknown>; contentType: string }> = {
+  'auth.md': { builder: wk.authMd, contentType: 'text/markdown; charset=utf-8' },
+  'agents.md': { builder: wk.agentsMd, contentType: 'text/markdown; charset=utf-8' },
+  'pricing.md': { builder: wk.pricingMd, contentType: 'text/markdown; charset=utf-8' },
+  '.well-known/ai-catalog.json': { builder: wk.aiCatalog, contentType: 'application/json' },
+  '.well-known/agent-card.json': { builder: wk.agentCard, contentType: 'application/json' },
+  '.well-known/api-catalog': { builder: wk.apiCatalog, contentType: 'application/linkset+json' },
+  '.well-known/mcp/server-card.json': { builder: wk.mcpServerCard, contentType: 'application/json' },
+}
+
+for (const [path, def] of Object.entries(WELL_KNOWN)) {
+  app.get(`/:slug/${path}`, async (c) => {
+    const tenant = await store.getTenantBySlug(c.req.param('slug'))
+    if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
+    const routes = await store.listRoutes(tenant.id)
+    const base = `${new URL(c.req.url).origin}/${tenant.slug}`
+    const body = def.builder({ tenant, routes, base })
+    return typeof body === 'string'
+      ? c.text(body, 200, { 'content-type': def.contentType })
+      : c.json(body)
+  })
+}
+
+/**
  * llms.txt por tenant: el archivo que leen los agentes que navegan en vez de
  * llamar APIs. Apunta al discovery doc y al MCP. El tenant puede linkearlo o
  * copiarlo a su propio dominio.
@@ -69,27 +108,11 @@ app.get('/:slug/llms.txt', async (c) => {
   const tenant = await store.getTenantBySlug(c.req.param('slug'))
   if (!tenant) return c.text('Tenant no encontrado', 404)
   const routes = await store.listRoutes(tenant.id)
-  const base = new URL(c.req.url).origin
-  const lines = [
-    `# ${tenant.name}`,
-    '',
-    `> API con pagos por request para agentes (MPP sobre HTTP 402).`,
-    '',
-    `- Gateway: ${base}/${tenant.slug}`,
-    `- Discovery (OpenAPI + precios): ${base}/${tenant.slug}/openapi.json`,
-    `- MCP (tools pagas por JSON-RPC): ${base}/${tenant.slug}/mcp`,
-    '',
-    '## Rutas con precio',
-    '',
-    ...routes.map(
-      (r) => `- ${r.method} ${r.pathPattern} — $${Number(r.priceUsd)} · ${r.description ?? ''}`,
-    ),
-    '',
-    'Para pagar: cualquier cliente MPP (npx mppx) o x402-compatible.',
-  ]
-  return c.text(lines.join('\n'))
+  const base = `${new URL(c.req.url).origin}/${tenant.slug}`
+  return c.text(wk.llmsTxt({ tenant, routes, base }), 200, {
+    'content-type': 'text/markdown; charset=utf-8',
+  })
 })
-
 /**
  * MCP por tenant: las rutas con precio del tenant expuestas como tools pagas
  * sobre Streamable HTTP. Un agente MCP las descubre, paga por JSON-RPC y
@@ -113,7 +136,15 @@ app.post('/:slug/mcp', async (c) => {
 app.all('/:slug/*', async (c) => {
   const slug = c.req.param('slug')
   const tenant = await store.getTenantBySlug(slug)
-  if (!tenant) return c.json({ error: `Tenant "${slug}" no encontrado` }, 404)
+  if (!tenant) {
+    return c.json(
+      {
+        error: `Tenant "${slug}" no encontrado`,
+        hint: 'El primer segmento del path es el slug del negocio. Revisa el gateway URL en tu discovery.',
+      },
+      404,
+    )
+  }
 
   const url = new URL(c.req.url)
   const path = url.pathname.slice(`/${slug}`.length) || '/'

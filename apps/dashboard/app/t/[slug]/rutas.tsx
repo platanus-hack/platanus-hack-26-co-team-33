@@ -21,7 +21,7 @@ export function RutasPanel({
     <section>
       <h2 className="text-lg font-medium">Rutas con precio</h2>
       <p className="mt-1 text-sm text-muted">
-        Solo estas cobran. Todo lo demás pasa gratis. Podés usar <code className="font-mono">:param</code>{' '}
+        Solo estas cobran. Todo lo demás pasa gratis. Puedes usar <code className="font-mono">:param</code>{' '}
         y <code className="font-mono">*</code>.
       </p>
 

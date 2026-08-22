@@ -41,7 +41,7 @@ app.get('/', (c) =>
 
     <section>
       <h2>Para agentes</h2>
-      <pre># pagá por request con cualquier cliente MPP
+      <pre># paga por request con cualquier cliente MPP
 npx mppx ${gateway}/api/indicadores/colombia
 
 # o usá las tools MCP

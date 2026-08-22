@@ -48,8 +48,8 @@ export function RetirosPanel({
       <h2 className="text-lg font-medium">Retirar</h2>
       <p className="mt-1 text-sm text-muted">
         {wallet
-          ? `Mandamos el saldo disponible a ${shortWallet(wallet)}.`
-          : 'Configurá primero tu wallet de retiro acá abajo.'}
+          ? `Enviamos el saldo disponible a ${shortWallet(wallet)}.`
+          : 'Configura primero tu wallet de retiro aquí abajo.'}
       </p>
 
       <form
@@ -152,7 +152,7 @@ function EstadoRetiro({ retiro }: { retiro: RetiroEstado }) {
           ) : null}
         </p>
       ) : (
-        <p className="text-red-400">El retiro falló. El saldo no se descontó. Reintentá.</p>
+        <p className="text-red-400">El retiro falló. El saldo no se descontó. Reintenta.</p>
       )}
     </div>
   )

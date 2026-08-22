@@ -19,4 +19,6 @@ export const env = {
   /** Secreto compartido entre dashboard y gateway para la API interna. */
   internalSecret: required('INTERNAL_API_SECRET'),
   rpcUrl: tempoConfig((process.env.TEMPO_NETWORK ?? 'testnet') === 'testnet').rpcUrl,
+  /** URL pública del gateway (para links en MCP resources y discovery). */
+  publicUrl: process.env.GATEWAY_PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 8787}`,
 }

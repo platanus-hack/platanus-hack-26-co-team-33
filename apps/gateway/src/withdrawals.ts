@@ -55,7 +55,7 @@ withdrawals.post('/:slug/withdraw', async (c) => {
   } catch (error) {
     await store.updateWithdrawal(withdrawal.id, { status: 'failed' })
     console.error('[withdraw] fallo el payout', error)
-    return c.json({ error: 'No se pudo enviar la transferencia. Reintentá.' }, 502)
+    return c.json({ error: 'No se pudo enviar la transferencia. Reintenta.' }, 502)
   }
 })
 

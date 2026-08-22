@@ -15,9 +15,9 @@ export default function NuevoNegocio() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-medium">Registrá tu negocio</h1>
+      <h1 className="text-2xl font-medium">Registra tu negocio</h1>
       <p className="mt-2 text-sm text-muted">
-        Dos campos. Al terminar tenés un gateway que cobra por cada request de un agente, sin tocar
+        Dos campos. Al terminar tienes un gateway que cobra por cada request de un agente, sin tocar
         el código de tu API.
       </p>
 
@@ -41,7 +41,7 @@ export default function NuevoNegocio() {
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
           />
           <span className="mt-1.5 block text-xs text-muted">
-            Es la API que ya tenés corriendo. Peaje la envuelve, no la reemplaza.
+            Es la API que ya tienes corriendo. Peaje la envuelve, no la reemplaza.
           </span>
         </label>
 
@@ -73,17 +73,17 @@ function Listo({ slug, apiKey }: { slug: string; apiKey: string }) {
         </p>
         <code className="mt-2 block break-all font-mono text-sm">{apiKey}</code>
         <p className="mt-2 text-xs text-muted">
-          Guardala ahora. En la base solo queda el hash: no la podemos volver a mostrar.
+          Guárdala ahora. En la base solo queda el hash: no la podemos volver a mostrar.
         </p>
       </div>
 
       <div className="mt-6 space-y-3 text-sm">
-        <p className="text-muted">Tu API ahora se consume por acá:</p>
+        <p className="text-muted">Tu API ahora se consume por aquí:</p>
         <code className="block break-all rounded-lg border border-border bg-panel p-3 font-mono text-sm">
           {base}/&lt;tu-ruta&gt;
         </code>
         <p className="text-muted">
-          Nada cobra todavía. Definí qué rutas tienen precio y el gateway empieza a responder 402 a
+          Nada cobra todavía. Define qué rutas tienen precio y el gateway empieza a responder 402 a
           los agentes.
         </p>
       </div>

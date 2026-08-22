@@ -12,7 +12,7 @@ export async function correrScore(slug: string): Promise<{ ok: boolean; error?: 
     return { ok: false, error: 'Ora solo escanea dominios públicos; tu origin es local.' }
   }
   const result = await freshScan(domain)
-  if (!result) return { ok: false, error: 'El scan de Ora falló. Reintentá en un rato.' }
+  if (!result) return { ok: false, error: 'El scan de Ora falló. Reintenta en un rato.' }
   revalidatePath(`/t/${slug}/kit`)
   return { ok: true }
 }

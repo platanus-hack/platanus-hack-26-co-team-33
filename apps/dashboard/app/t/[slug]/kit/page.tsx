@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { gatewayUrl } from '@/lib/config'
-import { cachedScore, checkStatus, prevision, scannableDomain, type OraScore } from '@/lib/ora'
+import { cachedScore, checkStatus, scannableDomain } from '@/lib/ora'
 import { currentTenant } from '@/lib/session'
 import { store } from '@/lib/store'
-import { BotonScore, CopyBlock, PublicarMppscan } from './partes'
+import { CopyBlock, PublicarMppscan } from './partes'
 
 export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   const { slug } = await params
@@ -29,7 +29,23 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   const tieneLlms = checkStatus(score, 'llms-txt-exists') === 'pass'
   const tieneJsonLd = checkStatus(score, 'json-ld') === 'pass'
 
-  const bloques = construirBloques({ tenant: { name: tenant.name, slug: tenant.slug }, base, routes, tieneLlms, tieneJsonLd })
+  const desdeGateway = await Promise.all(
+    ['auth.md', 'agents.md', '.well-known/ai-catalog.json', '.well-known/agent-card.json', '.well-known/api-catalog'].map(
+      async (path) => {
+        const res = await fetch(`${base}/${path}`, { cache: 'no-store' })
+        return { path, contenido: res.ok ? await res.text() : null }
+      },
+    ),
+  )
+
+  const bloques = construirBloques({
+    tenant: { name: tenant.name, slug: tenant.slug },
+    base,
+    routes,
+    tieneLlms,
+    tieneJsonLd,
+    desdeGateway: desdeGateway.filter((d): d is { path: string; contenido: string } => d.contenido !== null),
+  })
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -37,14 +53,18 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
         <Link href={`/t/${tenant.slug}`} className="text-xs text-muted hover:text-text">
           ← {tenant.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-medium">Kit agent-ready</h1>
+        <h1 className="mt-2 flex items-center gap-3 text-2xl font-medium">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/50 font-mono text-sm text-accent">
+            4
+          </span>
+          Haz que los agentes puedan encontrarte
+        </h1>
         <p className="mt-2 text-sm text-muted">
-          Qué tan lista está <strong>{originHost}</strong> para agentes, y los bloques exactos para
-          subir el score. Medido con Ora (ora.ai), el auditor de agent-readiness.
+          Los bloques exactos para <strong>{originHost}</strong>, en el orden que más score suma
+          (medido con Ora, el auditor de agent-readiness). Aplícalos por partes, o todo de una con
+          el prompt.
         </p>
       </header>
-
-      <SeccionScore slug={tenant.slug} domain={domain} score={score} />
 
       <PublicarMppscan slug={tenant.slug} discoveryUrl={`${base}/openapi.json`} />
 
@@ -53,6 +73,15 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
       {bloques.map((b) => (
         <CopyBlock key={b.titulo} titulo={b.titulo} detalle={b.detalle} contenido={b.contenido} />
       ))}
+
+      <div className="rounded-lg border border-accent/40 bg-accent/5 p-4 text-sm">
+        <p>
+          ¿Ya aplicaste el kit en tu web?{' '}
+          <Link href={`/t/${tenant.slug}#score-final`} className="text-accent underline">
+            Paso 5: vuelve a correr el score →
+          </Link>
+        </p>
+      </div>
 
       <p className="text-xs text-muted">
         Lo que ya sirve el gateway sin que hagas nada: discovery en{' '}
@@ -65,84 +94,6 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   )
 }
 
-function SeccionScore({
-  slug,
-  domain,
-  score,
-}: {
-  slug: string
-  domain: string | null
-  score: OraScore | null
-}) {
-  if (!domain) {
-    return (
-      <section className="rounded-lg border border-border bg-panel p-4 text-sm text-muted">
-        Tu origin es local, y Ora solo escanea dominios públicos. Cuando tu API tenga dominio,
-        acá aparece el score.
-      </section>
-    )
-  }
-
-  if (!score) {
-    return (
-      <section className="rounded-lg border border-border bg-panel p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-medium">Score de agent-readiness</h2>
-            <p className="mt-1 text-xs text-muted">
-              Todavía no hay score de {domain}. El scan tarda ~30 segundos.
-            </p>
-          </div>
-          <BotonScore slug={slug} label="Correr score" />
-        </div>
-      </section>
-    )
-  }
-
-  const p = prevision(score)
-  const porBloque = new Map<string, number>()
-  for (const a of p.arreglables) {
-    porBloque.set(a.bloque, (porBloque.get(a.bloque) ?? 0) + (a.check.estScoreGain ?? a.check.maxScore))
-  }
-
-  return (
-    <section className="rounded-lg border border-border bg-panel p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-medium">Score de {score.domain}</h2>
-          <p className="mt-3 flex items-baseline gap-3">
-            <span className="text-3xl">{p.actual}</span>
-            <span className="text-muted">→</span>
-            <span className="text-3xl text-accent">~{p.estimado}</span>
-            <span className="text-xs text-muted">con el kit aplicado (estimación de Ora)</span>
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <span className="rounded border border-border px-2 py-1 font-mono text-xs">
-            {score.grade}
-          </span>
-          <BotonScore slug={slug} label="Volver a correr" />
-        </div>
-      </div>
-      {porBloque.size > 0 ? (
-        <ul className="mt-4 space-y-1 text-xs text-muted">
-          {[...porBloque.entries()]
-            .sort(([, a], [, b]) => b - a)
-            .map(([bloque, gain]) => (
-              <li key={bloque}>
-                <span className="text-text">{bloque}</span> — +{gain.toFixed(1)} pts
-              </li>
-            ))}
-        </ul>
-      ) : (
-        <p className="mt-3 text-xs text-accent">
-          Todos los checks que Peaje ataca ya pasan. Queda publicar en los índices.
-        </p>
-      )}
-    </section>
-  )
-}
-
 type Bloque = { titulo: string; detalle: string; contenido: string }
 
 function construirBloques({
@@ -151,12 +102,14 @@ function construirBloques({
   routes,
   tieneLlms,
   tieneJsonLd,
+  desdeGateway,
 }: {
   tenant: { name: string; slug: string }
   base: string
   routes: { method: string; pathPattern: string; priceUsd: string; description: string | null }[]
   tieneLlms: boolean
   tieneJsonLd: boolean
+  desdeGateway: { path: string; contenido: string }[]
 }): Bloque[] {
   const llmsBloque = `## Pagos para agentes (MPP)
 
@@ -220,8 +173,8 @@ Allow: /
     {
       titulo: '1 · llms.txt',
       detalle: tieneLlms
-        ? 'Ya tenés llms.txt: agregá este bloque al final del que existe.'
-        : 'No tenés llms.txt. Creá el archivo /llms.txt en la raíz de tu dominio con esto.',
+        ? 'Ya tienes llms.txt: agrega este bloque al final del que existe.'
+        : 'No tienes llms.txt. Crea el archivo /llms.txt en la raíz de tu dominio con esto.',
       contenido: tieneLlms ? llmsBloque : llmsCompleto,
     },
     {
@@ -232,13 +185,13 @@ Allow: /
     {
       titulo: '3 · JSON-LD con tu oferta',
       detalle: tieneJsonLd
-        ? 'Ya tenés JSON-LD: sumá este bloque WebAPI junto al que existe.'
-        : 'No tenés datos estructurados. Pegá esto en el <head> de tu home.',
+        ? 'Ya tienes JSON-LD: suma este bloque WebAPI junto al que existe.'
+        : 'No tienes datos estructurados. Pega esto en el <head> de tu home.',
       contenido: jsonLd,
     },
     {
       titulo: '4 · pricing.md',
-      detalle: 'Precios en un archivo que los agentes leen directo. Serví /pricing.md en tu dominio.',
+      detalle: 'Precios en un archivo que los agentes leen directo. Sirve /pricing.md en tu dominio.',
       contenido: pricingMd,
     },
     {
@@ -251,6 +204,11 @@ Allow: /
       detalle: 'Si tu robots.txt bloquea bots, los agentes no llegan ni a ver el 402.',
       contenido: robots,
     },
+    ...desdeGateway.map((d, i) => ({
+      titulo: `${7 + i} · ${d.path}`,
+      detalle: `Sube este archivo a tu dominio en /${d.path}. Se genera solo desde tus rutas; cuando cambies precios, vuelve al kit y copia la versión nueva.`,
+      contenido: d.contenido,
+    })),
   ]
 }
 
@@ -265,23 +223,23 @@ function PromptTodoDeUna({
   originHost: string
   domain: string | null
 }) {
-  const prompt = `Hacé mi sitio (${originHost}) agent-ready. Mi API ya cobra por request a agentes vía MPP con Peaje; el gateway es ${base}.
+  const prompt = `Haz mi sitio (${originHost}) agent-ready. Mi API ya cobra por request a agentes vía MPP con Peaje; el gateway es ${base}.
 
-Aplicá estos cambios en el repo del sitio:
+Aplica estos cambios en el repo del sitio:
 
 ${bloques.map((b) => `## ${b.titulo}\n${b.detalle}\n\n\`\`\`\n${b.contenido}\n\`\`\``).join('\n\n')}
 
-Al terminar, verificá:
+Al terminar, verifica:
 1. npx mppx@latest validate ${base}  (el flujo de pago, debe pasar todo)
-2. ${domain ? `npx @ora-ai/ax@0.4 audit ${domain}  (el score de agent-readiness, compará contra el anterior)` : 'cuando el sitio tenga dominio público: npx @ora-ai/ax@0.4 audit <dominio>'}
-3. Registrá el servicio en https://www.mppscan.com/register con ${base}/openapi.json
+2. ${domain ? `npx @ora-ai/ax@0.4 audit ${domain}  (el score de agent-readiness, compara contra el anterior)` : 'cuando el sitio tenga dominio público: npx @ora-ai/ax@0.4 audit <dominio>'}
+3. Registra el servicio en https://www.mppscan.com/register con ${base}/openapi.json
 
 Referencia completa del estándar de auditoría: https://ora.ai/skill.md`
 
   return (
     <CopyBlock
       titulo="Todo de una · prompt para tu coding agent"
-      detalle="Pegalo en Claude Code, Cursor o el agente que uses sobre el repo de tu sitio: aplica los 6 bloques, valida el flujo de pago y re-corre el score."
+      detalle="Pégalo en Claude Code, Cursor o el agente que uses sobre el repo de tu sitio: aplica todos los bloques, valida el flujo de pago y re-corre el score."
       contenido={prompt}
     />
   )

@@ -8,8 +8,8 @@ export default function Landing() {
           Los agentes ya están usando tu API. Todavía no te pagan.
         </h1>
         <p className="mt-5 text-lg text-muted">
-          Peaje pone un cobro por request delante de la API que ya tenés. El agente pide, recibe un
-          402, paga solo y sigue. Vos ves la plata entrar y la retirás.
+          Peaje pone un cobro por request delante de la API que ya tienes. El agente pide, recibe un
+          402, paga solo y sigue. Vos ves el dinero entrar y lo retiras.
         </p>
         <div className="mt-8 flex gap-3">
           <Link
@@ -30,18 +30,18 @@ export default function Landing() {
       <section className="grid grid-cols-3 gap-6">
         <Paso
           n="01"
-          titulo="Registrás tu API"
-          texto="Nombre y URL. Te damos un gateway y un API key. No tocás tu código."
+          titulo="Registras tu API"
+          texto="Nombre y URL. Te damos un gateway y un API key. No tocas tu código."
         />
         <Paso
           n="02"
-          titulo="Ponés precios"
-          texto="Elegís qué rutas cobran y cuánto. El resto pasa gratis."
+          titulo="Pones precios"
+          texto="Eliges qué rutas cobran y cuánto. El resto pasa gratis."
         />
         <Paso
           n="03"
-          titulo="Cobrás y retirás"
-          texto="Cada pago queda en tu panel, con la wallet del agente y la tx. Retirás cuando querés."
+          titulo="Cobras y retiras"
+          texto="Cada pago queda en tu panel, con la wallet del agente y la tx. Retiras cuando quieres."
         />
       </section>
 

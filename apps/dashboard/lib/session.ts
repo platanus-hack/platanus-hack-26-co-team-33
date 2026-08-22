@@ -38,7 +38,7 @@ export async function currentTenant(): Promise<Tenant | null> {
 export async function requireTenant(slug: string): Promise<Tenant> {
   const tenant = await currentTenant()
   if (!tenant || tenant.slug !== slug) {
-    throw new Error('Sesión inválida para este negocio. Entrá con tu API key.')
+    throw new Error('Sesión inválida para este negocio. Entra con tu API key.')
   }
   return tenant
 }

@@ -8,6 +8,7 @@ import { resolvePayer } from './chain.js'
 import { env } from './env.js'
 import { proxyToOrigin } from './proxy.js'
 import { store } from './store.js'
+import { llmsTxt, pricingMd } from './wellknown.js'
 
 /**
  * Instancia MPP con transporte MCP: los Challenges viajan como error JSON-RPC
@@ -48,8 +49,38 @@ function pathParams(route: Route): string[] {
  * Nombre, descripción y precio salen de la DB; el handler cobra por MPP y
  * después hace proxy al origin, igual que el flujo HTTP.
  */
-function buildServer(tenant: Tenant, routes: Route[]): McpServer {
-  const server = new McpServer({ name: `${tenant.slug}-peaje`, version: '1.0.0' })
+function buildServer(tenant: Tenant, routes: Route[], base: string): McpServer {
+  const server = new McpServer(
+    {
+      name: `${tenant.slug}-peaje`,
+      version: '1.0.0',
+      title: `${tenant.name} · tools pagas`,
+      description: `Tools de ${tenant.name} con pago por llamada vía MPP. Sin API keys: cada tool cobra el precio que anuncia y devuelve un receipt.`,
+    },
+    { capabilities: { tools: {}, resources: {} } },
+  )
+
+  // Recursos informativos (mcp-resource-listing): precios y guía, gratis.
+  server.registerResource(
+    'pricing',
+    `${base}/pricing.md`,
+    { description: `Precios por endpoint de ${tenant.name}`, mimeType: 'text/markdown' },
+    async () => ({
+      contents: [
+        { uri: `${base}/pricing.md`, mimeType: 'text/markdown', text: pricingMd({ tenant, routes, base }) },
+      ],
+    }),
+  )
+  server.registerResource(
+    'guia',
+    `${base}/llms.txt`,
+    { description: `Guía de uso de ${tenant.name} para agentes`, mimeType: 'text/markdown' },
+    async () => ({
+      contents: [
+        { uri: `${base}/llms.txt`, mimeType: 'text/markdown', text: llmsTxt({ tenant, routes, base }) },
+      ],
+    }),
+  )
 
   for (const route of routes) {
     const params = pathParams(route)
@@ -65,6 +96,12 @@ function buildServer(tenant: Tenant, routes: Route[]): McpServer {
       {
         description: `${route.description ?? `${route.method} ${route.pathPattern}`} · Cuesta $${Number(route.priceUsd)} por llamada (MPP).`,
         inputSchema: shape,
+        annotations: {
+          title: route.description ?? `${route.method} ${route.pathPattern}`,
+          readOnlyHint: route.method.toUpperCase() === 'GET',
+          destructiveHint: !['GET', 'POST'].includes(route.method.toUpperCase()),
+          openWorldHint: true,
+        },
       },
       async (args: Record<string, unknown>, extra) => {
         const result = await mcpMppx.charge({
@@ -123,7 +160,8 @@ export async function handleMcpRequest(
   body: unknown,
 ): Promise<void> {
   const routes = await store.listRoutes(tenant.id)
-  const server = buildServer(tenant, routes)
+  const base = `${env.publicUrl}/${tenant.slug}`
+  const server = buildServer(tenant, routes, base)
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

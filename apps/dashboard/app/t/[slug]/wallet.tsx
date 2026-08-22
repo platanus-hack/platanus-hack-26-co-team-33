@@ -11,7 +11,7 @@ export function WalletForm({ slug, wallet }: { slug: string; wallet: string | nu
     <section>
       <h2 className="text-lg font-medium">Wallet de retiro</h2>
       <p className="mt-1 text-sm text-muted">
-        A dónde te mandamos la plata cuando retirás. Podés cambiarla cuando quieras.
+        A dónde te enviamos el dinero cuando retiras. Puedes cambiarla cuando quieras.
       </p>
       <form
         action={(formData) => {

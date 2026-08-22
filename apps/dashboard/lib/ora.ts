@@ -77,8 +77,24 @@ export const PEAJE_FIXABLE: Record<string, { bloque: string; viaGateway?: boolea
   'pricing-md': { bloque: 'pricing.md' },
   'pricing-info': { bloque: 'pricing.md' },
   'agent-instruction': { bloque: 'llms.txt' },
+  // Archivos que el kit copia del gateway al dominio del tenant
+  'ard-catalog': { bloque: '.well-known/ai-catalog.json' },
+  'ard-entries-valid': { bloque: '.well-known/ai-catalog.json' },
+  'a2a-agent-card': { bloque: '.well-known/agent-card.json' },
+  'api-catalog-rfc9727': { bloque: '.well-known/api-catalog' },
+  'auth-md-exists': { bloque: 'auth.md' },
+  'auth-md-structure': { bloque: 'auth.md' },
+  'agent-discovery-file': { bloque: 'agents.md' },
+  // Lo aporta el gateway solo, una vez que el sitio linkea el MCP
   'mpp-support': { bloque: 'gateway MPP', viaGateway: true },
   'x402-support': { bloque: 'gateway MPP', viaGateway: true },
+  'mcp-server-card': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-tool-annotations': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-tool-descriptions': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-param-schemas': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-server-identity': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-resource-listing': { bloque: 'gateway MCP', viaGateway: true },
+  'mcp-transport-modern': { bloque: 'gateway MCP', viaGateway: true },
 }
 
 export type Prevision = {
