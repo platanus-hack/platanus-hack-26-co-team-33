@@ -1,4 +1,5 @@
-import { serve } from '@hono/node-server'
+import { serve, type HttpBindings } from '@hono/node-server'
+import { RESPONSE_ALREADY_SENT } from '@hono/node-server/utils/response'
 import { TOKEN_DECIMALS, txExplorerUrl } from '@peaje/shared'
 import { Hono } from 'hono'
 import { generate } from 'mppx/discovery'
@@ -8,9 +9,10 @@ import { mppx } from './mpp.js'
 import { proxyToOrigin } from './proxy.js'
 import { matchRoute } from './router.js'
 import { store } from './store.js'
+import { handleMcpRequest } from './mcp.js'
 import { withdrawals } from './withdrawals.js'
 
-const app = new Hono()
+const app = new Hono<{ Bindings: HttpBindings }>()
 
 app.get('/health', (c) => c.json({ ok: true, network: env.testnet ? 'testnet' : 'mainnet' }))
 
@@ -24,13 +26,12 @@ app.get('/:slug/openapi.json', async (c) => {
   if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
 
   const routes = await store.listRoutes(tenant.id)
-  return c.json(
-    generate(mppx, {
+  const doc = generate(mppx, {
       info: { title: `${tenant.name} · Peaje`, version: '1.0.0' },
       routes: routes.map((route) => ({
         intent: 'charge',
         method: route.method,
-        path: `/${tenant.slug}${route.pathPattern}`,
+        path: route.pathPattern,
         options: {
           amount: route.priceUsd,
           currency: env.currency,
@@ -40,8 +41,10 @@ app.get('/:slug/openapi.json', async (c) => {
         },
         summary: route.description ?? undefined,
       })),
-    }),
-  )
+    })
+  // Los paths van sin el slug; la base la declara `servers`, como manda OpenAPI.
+  doc.servers = [{ url: `${new URL(c.req.url).origin}/${tenant.slug}` }]
+  return c.json(doc)
 })
 
 app.route('/_internal', withdrawals)
@@ -55,6 +58,49 @@ app.get('/_internal/:slug/ledger', async (c) => {
     balance: await store.balance(tenant.id),
     payments: payments.map((p) => ({ ...p, explorer: txExplorerUrl(p.receiptRef, env.testnet) })),
   })
+})
+
+/**
+ * llms.txt por tenant: el archivo que leen los agentes que navegan en vez de
+ * llamar APIs. Apunta al discovery doc y al MCP. El tenant puede linkearlo o
+ * copiarlo a su propio dominio.
+ */
+app.get('/:slug/llms.txt', async (c) => {
+  const tenant = await store.getTenantBySlug(c.req.param('slug'))
+  if (!tenant) return c.text('Tenant no encontrado', 404)
+  const routes = await store.listRoutes(tenant.id)
+  const base = new URL(c.req.url).origin
+  const lines = [
+    `# ${tenant.name}`,
+    '',
+    `> API con pagos por request para agentes (MPP sobre HTTP 402).`,
+    '',
+    `- Gateway: ${base}/${tenant.slug}`,
+    `- Discovery (OpenAPI + precios): ${base}/${tenant.slug}/openapi.json`,
+    `- MCP (tools pagas por JSON-RPC): ${base}/${tenant.slug}/mcp`,
+    '',
+    '## Rutas con precio',
+    '',
+    ...routes.map(
+      (r) => `- ${r.method} ${r.pathPattern} — $${Number(r.priceUsd)} · ${r.description ?? ''}`,
+    ),
+    '',
+    'Para pagar: cualquier cliente MPP (npx mppx) o x402-compatible.',
+  ]
+  return c.text(lines.join('\n'))
+})
+
+/**
+ * MCP por tenant: las rutas con precio del tenant expuestas como tools pagas
+ * sobre Streamable HTTP. Un agente MCP las descubre, paga por JSON-RPC y
+ * recibe el recurso, sin conocer la API HTTP.
+ */
+app.post('/:slug/mcp', async (c) => {
+  const tenant = await store.getTenantBySlug(c.req.param('slug'))
+  if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
+  const body = await c.req.json().catch(() => undefined)
+  await handleMcpRequest(tenant, c.env.incoming, c.env.outgoing, body)
+  return RESPONSE_ALREADY_SENT
 })
 
 /**

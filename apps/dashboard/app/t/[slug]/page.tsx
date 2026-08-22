@@ -30,6 +30,11 @@ export default async function Panel({ params }: PageProps<'/t/[slug]'>) {
         <p className="font-mono text-xs text-muted">{tenant.slug}</p>
         <h1 className="mt-1 text-2xl font-medium">{tenant.name}</h1>
         <p className="mt-2 text-sm text-muted">
+          <Link href={`/t/${tenant.slug}/kit`} className="text-accent hover:underline">
+            Kit agent-ready →
+          </Link>
+        </p>
+        <p className="mt-2 text-sm text-muted">
           Tu API vive en{' '}
           <code className="font-mono text-text">{tenant.originUrl}</code>. Los agentes la consumen
           por <code className="font-mono text-text">{base}</code>
