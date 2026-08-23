@@ -56,10 +56,10 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
               )}
             </div>
           </header>
-          <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+          <main className="mx-auto max-w-5xl px-6 pt-10 pb-24">{children}</main>
         </Providers>
-        <footer className="mx-auto max-w-5xl px-6 py-10">
-          <p className="text-center text-xs text-muted">
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg px-6 py-4">
+          <p className="mx-auto max-w-5xl text-center text-xs text-muted">
             Made with love by{' '}
             <a
               href="https://github.com/platanus-hack/platanus-hack-26-co-team-33"
