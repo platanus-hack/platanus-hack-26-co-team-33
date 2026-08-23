@@ -55,5 +55,5 @@ Probar el ciclo de pago: `npx mppx validate http://localhost:8787/<slug>`
 
 - `mppx validate` contra producción: 90 checks, 0 fallos
 - Pagos reales en Tempo testnet (pathUSD), verificables en [explore.testnet.tempo.xyz](https://explore.testnet.tempo.xyz)
-- Retiros: la API del gateway y la lógica de treasury ya funcionan, probado con transacciones reales — feature disponible pronto en el dashboard
+- Retiros: la lógica de treasury ya funciona y se probó con transacciones reales (internamente, con el secreto de la plataforma) — feature disponible pronto para los usuarios en el dashboard
 - Plan y specs en [docs/PLAN.md](./docs/PLAN.md)
