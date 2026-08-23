@@ -117,8 +117,20 @@ function buildServer(tenant: Tenant, routes: Route[], base: string): McpServer {
         const query = new URLSearchParams((args.query as Record<string, string>) ?? {})
         const url = `http://origin.internal${path}${query.size ? `?${query}` : ''}`
 
-        const upstream = await proxyToOrigin(new Request(url, { method: route.method }), tenant, path)
-        const body = await upstream.text()
+        // El pago ya se validó/liquidó arriba: si el origin falla de acá en
+        // más, el agente ya pagó. Sellamos el receipt igual, sobre un texto
+        // de error, para que el pago quede acreditado y quede reclamable.
+        let body: string
+        try {
+          const upstream = await proxyToOrigin(new Request(url, { method: route.method }), tenant, path)
+          body = await upstream.text()
+        } catch (err) {
+          console.error('[mcp] origin no respondió', { tenant: tenant.slug, tool: toolName(route), err })
+          body = JSON.stringify({
+            error: 'El origin del negocio no respondió a esta tool call ya pagada.',
+            hint: 'Guarda la referencia del receipt y contacta al negocio o a soporte.',
+          })
+        }
 
         const sealed = result.withReceipt({
           content: [{ type: 'text' as const, text: body }],
