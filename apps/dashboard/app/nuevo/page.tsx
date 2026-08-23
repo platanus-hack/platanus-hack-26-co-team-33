@@ -185,22 +185,24 @@ function Listo({ slug, payoutWallet }: { slug: string; payoutWallet: string }) {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-medium">Listo. Tu gateway está arriba.</h1>
 
-      <div className="mt-6 rounded-lg border border-accent/40 bg-accent/5 p-4">
-        <p className="text-xs uppercase tracking-wide text-accent">Tu wallet de cobro</p>
-        <code className="mt-2 block break-all font-mono text-sm">{payoutWallet}</code>
-        <p className="mt-2 text-xs text-muted">
-          Ahí recibirás los pagos de los agentes.
-        </p>
-      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-accent/40 bg-accent/5 p-5">
+          <p className="text-xs tracking-wide text-accent uppercase">Wallet embebida</p>
+          <p className="mt-3 text-3xl font-medium tabular-nums">$0.00</p>
+          <p className="mt-2 font-mono text-xs break-all text-muted">{payoutWallet}</p>
+          <p className="mt-3 text-xs text-muted">Acá vas a recibir los pagos de los agentes.</p>
+        </div>
 
-      <div className="mt-6 space-y-3 text-sm">
-        <p className="text-muted">Los agentes consumen tu website por aquí:</p>
-        <code className="block break-all rounded-lg border border-border bg-panel p-3 font-mono text-sm">
-          {base}/&lt;tu-ruta&gt;
-        </code>
-        <p className="text-muted">
-          En este momento no tienes rutas. Comienza el onboarding para crearlas.
-        </p>
+        <div className="rounded-lg border border-border bg-panel p-5">
+          <p className="text-xs tracking-wide text-muted uppercase">Endpoint</p>
+          <code className="mt-3 block break-all font-mono text-sm text-text">
+            {base}/&lt;tu-ruta&gt;
+          </code>
+          <p className="mt-3 text-xs text-muted">
+            Los agentes consumen tu website por aquí. Todavía no tienes rutas: comienza el
+            onboarding para crearlas.
+          </p>
+        </div>
       </div>
 
       <Link
