@@ -9,7 +9,7 @@ export function Providers({ children }: { children: ReactNode }) {
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
         loginMethods: ['email'],
-        appearance: { theme: 'dark', logo: '/logo-mark.svg' },
+        appearance: { theme: 'dark', logo: '/peaje-logo-privy.png' },
       }}
     >
       {children}
