@@ -1,31 +1,111 @@
 'use client'
 
+import { useLoginWithEmail, usePrivy } from '@privy-io/react-auth'
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { gatewayUrl } from '@/lib/config'
 import { registrarNegocio, type AltaResultado } from './actions'
 
-export default function NuevoNegocio() {
-  const [resultado, action, pending] = useActionState<AltaResultado | null, FormData>(
-    registrarNegocio,
-    null,
-  )
+type Step = 'form' | 'code'
 
-  if (resultado?.ok) return <Listo slug={resultado.slug} apiKey={resultado.apiKey} />
+export default function NuevoNegocio() {
+  const [step, setStep] = useState<Step>('form')
+  const [name, setName] = useState('')
+  const [originUrl, setOriginUrl] = useState('')
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+  const [resultado, setResultado] = useState<AltaResultado | null>(null)
+
+  const { getAccessToken } = usePrivy()
+  const { sendCode, loginWithCode } = useLoginWithEmail()
+
+  async function enviarCodigo(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    if (!name.trim()) return setError('Falta el nombre del negocio.')
+    if (!originUrl.trim()) return setError('Falta la URL de tu API.')
+    if (!email.trim()) return setError('Falta tu email.')
+    setPending(true)
+    try {
+      await sendCode({ email })
+      setStep('code')
+    } catch {
+      setError('No pudimos enviar el código. Revisa el email.')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function verificarYCrear(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setPending(true)
+    try {
+      await loginWithCode({ code })
+      const accessToken = await getAccessToken()
+      if (!accessToken) throw new Error('sin token')
+      const formData = new FormData()
+      formData.set('name', name)
+      formData.set('originUrl', originUrl)
+      formData.set('privyAccessToken', accessToken)
+      const r = await registrarNegocio(null, formData)
+      if (!r.ok) {
+        setError(r.error)
+        return
+      }
+      setResultado(r)
+    } catch {
+      setError('Código inválido. Intenta de nuevo.')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  if (resultado?.ok) return <Listo slug={resultado.slug} payoutWallet={resultado.payoutWallet} />
+
+  if (step === 'code') {
+    return (
+      <div className="max-w-md">
+        <h1 className="text-2xl font-medium">Revisa tu email</h1>
+        <p className="mt-2 text-sm text-muted">
+          Te mandamos un código a <span className="text-text">{email}</span>.
+        </p>
+        <form onSubmit={verificarYCrear} className="mt-6 space-y-4">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            placeholder="123456"
+            className="w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
+          />
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
+          >
+            {pending ? 'Verificando…' : 'Verificar y crear gateway'}
+          </button>
+        </form>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-medium">Registra tu negocio</h1>
       <p className="mt-2 text-sm text-muted">
-        Dos campos. Al terminar tienes un gateway que cobra por cada request de un agente, sin tocar
-        el código de tu API.
+        Con tu email creamos tu wallet de cobro automáticamente. Nada de API keys para copiar.
       </p>
 
-      <form action={action} className="mt-8 space-y-5">
+      <form onSubmit={enviarCodigo} className="mt-8 space-y-5">
         <label className="block">
           <span className="text-sm text-muted">Nombre del negocio</span>
           <input
-            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
             placeholder="DataLatam"
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
@@ -35,7 +115,8 @@ export default function NuevoNegocio() {
         <label className="block">
           <span className="text-sm text-muted">URL de tu sitio web</span>
           <input
-            name="originUrl"
+            value={originUrl}
+            onChange={(e) => setOriginUrl(e.target.value)}
             required
             placeholder="https://tunegocio.com"
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
@@ -45,35 +126,46 @@ export default function NuevoNegocio() {
           </span>
         </label>
 
-        {resultado && !resultado.ok ? (
-          <p className="text-sm text-red-400">{resultado.error}</p>
-        ) : null}
+        <label className="block">
+          <span className="text-sm text-muted">Tu email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="vos@tunegocio.com"
+            className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
+          />
+          <span className="mt-1.5 block text-xs text-muted">
+            Ahí te mandamos el código para entrar. También es donde cae tu identidad de cobro.
+          </span>
+        </label>
+
+        {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
         <button
           type="submit"
           disabled={pending}
           className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
         >
-          {pending ? 'Creando…' : 'Crear gateway'}
+          {pending ? 'Enviando código…' : 'Enviar código'}
         </button>
       </form>
     </div>
   )
 }
 
-function Listo({ slug, apiKey }: { slug: string; apiKey: string }) {
+function Listo({ slug, payoutWallet }: { slug: string; payoutWallet: string }) {
   const base = `${gatewayUrl}/${slug}`
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-medium">Listo. Tu gateway está arriba.</h1>
 
       <div className="mt-6 rounded-lg border border-accent/40 bg-accent/5 p-4">
-        <p className="text-xs uppercase tracking-wide text-accent">
-          Tu API key. Se muestra una sola vez.
-        </p>
-        <code className="mt-2 block break-all font-mono text-sm">{apiKey}</code>
+        <p className="text-xs uppercase tracking-wide text-accent">Tu wallet de cobro</p>
+        <code className="mt-2 block break-all font-mono text-sm">{payoutWallet}</code>
         <p className="mt-2 text-xs text-muted">
-          Guárdala ahora. En la base solo queda el hash: no la podemos volver a mostrar.
+          Privy la creó y la custodia. Ahí cae la plata de cada compra.
         </p>
       </div>
 

@@ -2,46 +2,20 @@
 
 import type { Withdrawal } from '@peaje/db'
 import { txExplorerUrl } from '@peaje/shared'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useState } from 'react'
 import { money, shortWallet } from '@/lib/config'
-import { estadoRetiro, retirar, type RetiroEstado } from './actions'
 
 export function RetirosPanel({
-  slug,
   disponible,
   wallet,
   historial,
 }: {
-  slug: string
   disponible: string
   wallet: string | null
   historial: Withdrawal[]
 }) {
-  const [enCurso, setEnCurso] = useState<RetiroEstado | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [comingSoon, setComingSoon] = useState(false)
   const puedeRetirar = Number(disponible) > 0 && Boolean(wallet)
-
-  // Polling del retiro en curso hasta que confirme o falle.
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null)
-  useEffect(() => {
-    if (!enCurso || enCurso.status !== 'pending') {
-      if (timer.current) clearInterval(timer.current)
-      return
-    }
-    timer.current = setInterval(() => {
-      startTransition(async () => {
-        try {
-          setEnCurso(await estadoRetiro(slug, enCurso.id))
-        } catch {
-          // El poll reintenta solo en el próximo tick.
-        }
-      })
-    }, 3000)
-    return () => {
-      if (timer.current) clearInterval(timer.current)
-    }
-  }, [slug, enCurso])
 
   return (
     <section>
@@ -52,39 +26,34 @@ export function RetirosPanel({
           : 'Configura primero tu wallet de retiro aquí abajo.'}
       </p>
 
-      <form
-        action={(formData) => {
-          setError(null)
-          startTransition(async () => {
-            try {
-              setEnCurso(await retirar(slug, formData))
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'No se pudo retirar')
-            }
-          })
-        }}
-        className="mt-3 flex items-center gap-3"
-      >
+      <div className="mt-3 flex items-center gap-3">
         <input
           name="amount"
           type="number"
           step="0.000001"
           min="0"
           placeholder={disponible}
-          className="w-36 rounded-lg border border-border bg-panel px-3 py-2 font-mono text-sm outline-none focus:border-accent"
+          disabled
+          className="w-36 rounded-lg border border-border bg-panel px-3 py-2 font-mono text-sm outline-none focus:border-accent disabled:opacity-40"
         />
         <button
-          disabled={!puedeRetirar || pending || enCurso?.status === 'pending'}
+          disabled={!puedeRetirar}
+          onClick={() => setComingSoon(true)}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black disabled:opacity-40"
         >
-          {enCurso?.status === 'pending' ? 'Enviando…' : `Retirar ${money(disponible)}`}
+          Retirar {money(disponible)}
         </button>
         <span className="text-xs text-muted">Vacío = todo el saldo</span>
-      </form>
+      </div>
 
-      {error ? <p className="mt-2 text-sm text-red-400">{error}</p> : null}
-
-      {enCurso ? <EstadoRetiro retiro={enCurso} /> : null}
+      {comingSoon ? (
+        <div className="mt-3 flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/5 p-3 text-sm">
+          <span>Los retiros llegan pronto. Tu saldo sigue seguro y acumulándose.</span>
+          <button onClick={() => setComingSoon(false)} className="ml-auto text-xs text-muted hover:text-text">
+            Cerrar
+          </button>
+        </div>
+      ) : null}
 
       {historial.length > 0 ? (
         <ul className="mt-5 space-y-1.5">
@@ -116,45 +85,6 @@ export function RetirosPanel({
         </ul>
       ) : null}
     </section>
-  )
-}
-
-function EstadoRetiro({ retiro }: { retiro: RetiroEstado }) {
-  return (
-    <div className="mt-4 rounded-lg border border-border bg-panel p-4 text-sm">
-      {retiro.status === 'pending' ? (
-        <p>
-          <span className="text-accent">Enviando {money(retiro.amount)}</span> a{' '}
-          {shortWallet(retiro.toWallet)}…{' '}
-          {retiro.explorerUrl ? (
-            <a
-              href={retiro.explorerUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-accent underline"
-            >
-              ver tx en el explorer
-            </a>
-          ) : null}
-        </p>
-      ) : retiro.status === 'confirmed' ? (
-        <p>
-          Listo. {money(retiro.amount)} confirmados en {shortWallet(retiro.toWallet)}.{' '}
-          {retiro.explorerUrl ? (
-            <a
-              href={retiro.explorerUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-accent underline"
-            >
-              ver tx
-            </a>
-          ) : null}
-        </p>
-      ) : (
-        <p className="text-red-400">El retiro falló. El saldo no se descontó. Reintenta.</p>
-      )}
-    </div>
   )
 }
 
