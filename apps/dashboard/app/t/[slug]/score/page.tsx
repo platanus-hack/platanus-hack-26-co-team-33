@@ -74,14 +74,17 @@ function Resultado({ slug, score }: { slug: string; score: OraScore }) {
         <section>
           <h2 className="font-medium text-green-400">Lo que ya tienes bien</h2>
           <p className="mt-1 text-xs text-muted">{bien.length} checks pasando</p>
-          <ul className="mt-3 max-h-96 space-y-1.5 overflow-y-auto pr-2">
-            {bien.map((c) => (
-              <li key={c.id} className="flex items-center gap-2 text-sm">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />
-                {c.name}
-              </li>
-            ))}
-          </ul>
+          <div className="relative mt-3">
+            <ul className="scroll-thin max-h-96 space-y-1.5 overflow-y-auto pr-2">
+              {bien.map((c) => (
+                <li key={c.id} className="flex items-center gap-2 text-sm">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />
+                  {c.name}
+                </li>
+              ))}
+            </ul>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-bg to-transparent" />
+          </div>
         </section>
 
         <section>
@@ -89,26 +92,31 @@ function Resultado({ slug, score }: { slug: string; score: OraScore }) {
           <p className="mt-1 text-xs text-muted">
             {p.arreglables.length} checks que el kit y el gateway atacan
           </p>
-          <ul className="mt-3 max-h-96 space-y-1.5 overflow-y-auto pr-2">
-            {p.arreglables
-              .sort(
-                (a, b) =>
-                  (b.check.estScoreGain ?? b.check.maxScore) -
-                  (a.check.estScoreGain ?? a.check.maxScore),
-              )
-              .map((a) => (
-                <li key={a.check.id} className="flex items-center gap-2 text-sm">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-                  <span className="flex-1">{a.check.name}</span>
-                  <span className="font-mono text-xs text-muted">
-                    +{(a.check.estScoreGain ?? a.check.maxScore).toFixed(1)}
-                  </span>
-                  <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted">
-                    {a.viaGateway ? 'gateway' : a.bloque}
-                  </span>
-                </li>
-              ))}
-          </ul>
+          <div className="relative mt-3">
+            <ul className="scroll-thin max-h-96 space-y-1.5 overflow-y-auto pr-2">
+              {p.arreglables
+                .sort(
+                  (a, b) =>
+                    (b.check.estScoreGain ?? b.check.maxScore) -
+                    (a.check.estScoreGain ?? a.check.maxScore),
+                )
+                .map((a) => (
+                  <li key={a.check.id} className="flex items-center gap-2 text-sm">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                    <span className="flex-1">{a.check.name}</span>
+                    <span className="font-mono text-xs text-muted">
+                      +{(a.check.estScoreGain ?? a.check.maxScore).toFixed(1)}
+                    </span>
+                    <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted">
+                      {a.viaGateway ? 'gateway' : a.bloque}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+            {p.arreglables.length > 0 ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-bg to-transparent" />
+            ) : null}
+          </div>
           {p.arreglables.length === 0 ? (
             <p className="mt-3 text-sm text-accent">
               Todos los checks que Peaje ataca ya pasan.
