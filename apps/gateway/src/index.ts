@@ -26,7 +26,8 @@ app.get('/:slug/openapi.json', async (c) => {
   const tenant = await store.getTenantBySlug(slug)
   if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
 
-  const routes = await store.listRoutes(tenant.id)
+  // El discovery de pagos solo lista lo que cobra; lo gratis va en llms.txt.
+  const routes = (await sellableRoutes(tenant.id)).filter((r) => Number(r.priceUsd) > 0)
   const doc = generate(mppx, {
       info: { title: `${tenant.name} · Peaje`, version: '1.0.0' },
       routes: routes.map((route) => ({
@@ -86,11 +87,31 @@ const WELL_KNOWN: Record<string, { builder: (ctx: { tenant: Parameters<typeof wk
   '.well-known/mcp/server-card.json': { builder: wk.mcpServerCard, contentType: 'application/json' },
 }
 
+/** Rutas de API + links con precio, unificados para discovery y archivos. */
+async function sellableRoutes(tenantId: string) {
+  const [routes, resources] = await Promise.all([
+    store.listRoutes(tenantId),
+    store.listResources(tenantId),
+  ])
+  return [
+    ...routes,
+    ...resources.map((r) => ({
+      id: r.id,
+      tenantId: r.tenantId,
+      method: 'GET',
+      pathPattern: `/r/${r.slug}`,
+      priceUsd: r.priceUsd,
+      description: r.title ?? r.slug,
+      active: true,
+    })),
+  ]
+}
+
 for (const [path, def] of Object.entries(WELL_KNOWN)) {
   app.get(`/:slug/${path}`, async (c) => {
     const tenant = await store.getTenantBySlug(c.req.param('slug'))
     if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
-    const routes = await store.listRoutes(tenant.id)
+    const routes = await sellableRoutes(tenant.id)
     const base = `${new URL(c.req.url).origin}/${tenant.slug}`
     const body = def.builder({ tenant, routes, base })
     return typeof body === 'string'
@@ -107,12 +128,60 @@ for (const [path, def] of Object.entries(WELL_KNOWN)) {
 app.get('/:slug/llms.txt', async (c) => {
   const tenant = await store.getTenantBySlug(c.req.param('slug'))
   if (!tenant) return c.text('Tenant no encontrado', 404)
-  const routes = await store.listRoutes(tenant.id)
+  const routes = await sellableRoutes(tenant.id)
   const base = `${new URL(c.req.url).origin}/${tenant.slug}`
   return c.text(wk.llmsTxt({ tenant, routes, base }), 200, {
     'content-type': 'text/markdown; charset=utf-8',
   })
 })
+/**
+ * Links con precio: /{slug}/r/{resource}. La URL destino es absoluta (no
+ * depende del origin del tenant): cualquier página, PDF o dataset público
+ * se vuelve cobrable sin que el negocio tenga API.
+ */
+app.get('/:slug/r/:rslug', async (c) => {
+  const tenant = await store.getTenantBySlug(c.req.param('slug'))
+  if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
+
+  const resource = await store.getResource(tenant.id, c.req.param('rslug'))
+  if (!resource) {
+    const disponibles = (await store.listResources(tenant.id)).map((r) => r.slug)
+    return c.json(
+      { error: 'Recurso no encontrado', hint: 'Revisa el discovery del tenant.', disponibles },
+      404,
+    )
+  }
+
+  // Precio 0 = link gratis: se sirve directo, sin 402.
+  const gratis = Number(resource.priceUsd) <= 0
+
+  const result = gratis
+    ? null
+    : await mppx.charge({
+        amount: resource.priceUsd,
+        description: resource.title ?? resource.slug,
+      })(c.req.raw)
+
+  if (result && result.status === 402) return result.challenge
+
+  const upstream = await fetch(resource.url, { redirect: 'follow' })
+  const headers = new Headers(upstream.headers)
+  headers.delete('content-encoding')
+  headers.delete('content-length')
+  const respuesta = new Response(upstream.body, { status: upstream.status, headers })
+  if (!result) return respuesta
+  const sealed = result.withReceipt(respuesta)
+
+  await creditReceipt(sealed, {
+    tenantId: tenant.id,
+    routeId: null,
+    path: `/r/${resource.slug}`,
+    priceUsd: resource.priceUsd,
+  })
+
+  return sealed
+})
+
 /**
  * MCP por tenant: las rutas con precio del tenant expuestas como tools pagas
  * sobre Streamable HTTP. Un agente MCP las descubre, paga por JSON-RPC y

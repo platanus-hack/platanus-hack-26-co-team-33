@@ -60,6 +60,24 @@ export type NewTenant = {
   payoutWallet?: string | null
 }
 
+export type Resource = {
+  id: string
+  tenantId: string
+  slug: string
+  url: string
+  title: string | null
+  priceUsd: string
+  active: boolean
+}
+
+export type NewResource = {
+  tenantId: string
+  slug: string
+  url: string
+  title?: string | null
+  priceUsd: string
+}
+
 export type NewRoute = {
   tenantId: string
   method: string
@@ -87,6 +105,12 @@ export interface Store {
   listRoutes(tenantId: string): Promise<Route[]>
   createRoute(input: NewRoute): Promise<Route>
   deleteRoute(tenantId: string, routeId: string): Promise<void>
+
+  // links con precio (URLs absolutas detrás de 402)
+  listResources(tenantId: string): Promise<Resource[]>
+  getResource(tenantId: string, slug: string): Promise<Resource | null>
+  createResources(inputs: NewResource[]): Promise<Resource[]>
+  deleteResource(tenantId: string, resourceId: string): Promise<void>
 
   // ledger
   recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment>

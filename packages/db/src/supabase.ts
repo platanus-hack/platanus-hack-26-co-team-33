@@ -1,8 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type {
   Balance,
+  NewResource,
   NewRoute,
   NewTenant,
+  Resource,
   Payment,
   Route,
   Store,
@@ -34,6 +36,18 @@ function routeFrom(row: Row): Route {
     pathPattern: row.path_pattern,
     priceUsd: String(row.price_usd),
     description: row.description,
+    active: row.active,
+  }
+}
+
+function resourceFrom(row: Row): Resource {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    slug: row.slug,
+    url: row.url,
+    title: row.title,
+    priceUsd: String(row.price_usd),
     active: row.active,
   }
 }
@@ -180,6 +194,58 @@ export class SupabaseStore implements Store {
       .eq('tenant_id', tenantId)
       .eq('id', routeId)
     this.#fail('deleteRoute', error)
+  }
+
+  async listResources(tenantId: string): Promise<Resource[]> {
+    const { data, error } = await this.#db
+      .from('resources')
+      .select()
+      .eq('tenant_id', tenantId)
+      .eq('active', true)
+      .order('created_at', { ascending: true })
+    this.#fail('listResources', error)
+    return (data ?? []).map(resourceFrom)
+  }
+
+  async getResource(tenantId: string, slug: string): Promise<Resource | null> {
+    const { data, error } = await this.#db
+      .from('resources')
+      .select()
+      .eq('tenant_id', tenantId)
+      .eq('slug', slug)
+      .eq('active', true)
+      .maybeSingle()
+    this.#fail('getResource', error)
+    return data ? resourceFrom(data as Row) : null
+  }
+
+  async createResources(inputs: NewResource[]): Promise<Resource[]> {
+    if (inputs.length === 0) return []
+    const { data, error } = await this.#db
+      .from('resources')
+      .upsert(
+        inputs.map((r) => ({
+          tenant_id: r.tenantId,
+          slug: r.slug,
+          url: r.url,
+          title: r.title ?? null,
+          price_usd: r.priceUsd,
+          active: true,
+        })),
+        { onConflict: 'tenant_id,slug' },
+      )
+      .select()
+    this.#fail('createResources', error)
+    return (data ?? []).map(resourceFrom)
+  }
+
+  async deleteResource(tenantId: string, resourceId: string): Promise<void> {
+    const { error } = await this.#db
+      .from('resources')
+      .update({ active: false })
+      .eq('tenant_id', tenantId)
+      .eq('id', resourceId)
+    this.#fail('deleteResource', error)
   }
 
   async recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment> {

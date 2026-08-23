@@ -1,7 +1,9 @@
 import type {
   Balance,
+  NewResource,
   NewRoute,
   NewTenant,
+  Resource,
   Payment,
   Route,
   Store,
@@ -113,6 +115,42 @@ export class MemoryStore implements Store {
     const list = this.#routes.get(tenantId) ?? []
     const route = list.find((r) => r.id === routeId)
     if (route) route.active = false
+  }
+
+  #resources = new Map<string, Resource[]>()
+
+  async listResources(tenantId: string) {
+    return (this.#resources.get(tenantId) ?? []).filter((r) => r.active)
+  }
+
+  async getResource(tenantId: string, slug: string) {
+    return (await this.listResources(tenantId)).find((r) => r.slug === slug) ?? null
+  }
+
+  async createResources(inputs: NewResource[]) {
+    const created: Resource[] = []
+    for (const input of inputs) {
+      const list = this.#resources.get(input.tenantId) ?? []
+      if (list.some((r) => r.active && r.slug === input.slug)) continue
+      const row: Resource = {
+        id: this.#id('res'),
+        tenantId: input.tenantId,
+        slug: input.slug,
+        url: input.url,
+        title: input.title ?? null,
+        priceUsd: input.priceUsd,
+        active: true,
+      }
+      list.push(row)
+      this.#resources.set(input.tenantId, list)
+      created.push(row)
+    }
+    return created
+  }
+
+  async deleteResource(tenantId: string, resourceId: string) {
+    const row = (this.#resources.get(tenantId) ?? []).find((r) => r.id === resourceId)
+    if (row) row.active = false
   }
 
   async recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>) {

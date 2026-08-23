@@ -137,3 +137,13 @@ export function checkStatus(score: OraScore | null, id: string): OraCheck['statu
   }
   return null
 }
+
+/** Escala oficial de Ora (ora.ai/methodology). */
+export function gradeDe(score: number): string {
+  if (score >= 95) return 'A+'
+  if (score >= 86) return 'A'
+  if (score >= 70) return 'B'
+  if (score >= 48) return 'C'
+  if (score >= 28) return 'D'
+  return 'F'
+}

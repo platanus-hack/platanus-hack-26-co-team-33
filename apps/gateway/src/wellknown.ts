@@ -26,7 +26,8 @@ export function llmsTxt({ tenant, routes, base }: Ctx): string {
     '## Rutas con precio',
     '',
     ...routes.map(
-      (r) => `- ${r.method} ${r.pathPattern} — $${Number(r.priceUsd)} USD · ${r.description ?? ''}`,
+      (r) =>
+        `- ${r.method} ${r.pathPattern} — ${Number(r.priceUsd) > 0 ? `$${Number(r.priceUsd)} USD` : 'Gratis'} · ${r.description ?? ''}`,
     ),
     '',
     'Cliente de referencia: `npx mppx@latest <url>` (crea wallet, paga y reintenta solo).',
@@ -42,7 +43,9 @@ export function pricingMd({ tenant, routes, base }: Ctx): string {
     '',
     '| Endpoint | Precio |',
     '|---|---|',
-    ...routes.map((r) => `| ${r.method} ${r.pathPattern} | $${Number(r.priceUsd)} USD |`),
+    ...routes.map(
+      (r) => `| ${r.method} ${r.pathPattern} | ${Number(r.priceUsd) > 0 ? `$${Number(r.priceUsd)} USD` : 'Gratis'} |`,
+    ),
     '',
     `Gateway: ${base} · Discovery: ${base}/openapi.json · MCP: ${base}/mcp`,
   ].join('\n')

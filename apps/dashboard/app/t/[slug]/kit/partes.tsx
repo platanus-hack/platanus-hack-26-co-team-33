@@ -1,76 +1,49 @@
 'use client'
 
 import { useState } from 'react'
+import type { ChequeoIntegracion } from './actions'
 
-export function CopyBlock({
+/** Bloque colapsable del kit: título + detalle visibles, contenido bajo toggle. */
+export function ToggleBlock({
   titulo,
   detalle,
   contenido,
+  abierto = false,
 }: {
   titulo: string
   detalle: string
   contenido: string
+  abierto?: boolean
 }) {
   const [copiado, setCopiado] = useState(false)
   return (
-    <section>
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-medium">{titulo}</h2>
-        <button
-          onClick={() => {
-            void navigator.clipboard.writeText(contenido)
-            setCopiado(true)
-            setTimeout(() => setCopiado(false), 1500)
-          }}
-          className="text-xs text-accent hover:underline"
-        >
-          {copiado ? 'copiado ✓' : 'copiar'}
-        </button>
-      </div>
-      <p className="mt-1 text-xs text-muted">{detalle}</p>
-      <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-panel p-3 font-mono text-xs leading-relaxed">
-        {contenido}
-      </pre>
-    </section>
-  )
-}
-
-export function PublicarMppscan({ slug, discoveryUrl }: { slug: string; discoveryUrl: string }) {
-  const [estado, setEstado] = useState<'idle' | 'publicando' | 'publicado'>('idle')
-  return (
-    <section className="rounded-lg border border-accent/40 bg-accent/5 p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="font-medium">Publicar en los índices MPP</h2>
-          <p className="mt-1 text-xs text-muted">
-            MPPScan y el directorio de mpp.dev: donde los agentes buscan APIs pagas. El MCP de
-            discovery (mpp.dev/mcp/services) rankea servicios por tarea.
-          </p>
-        </div>
-        {estado === 'publicado' ? (
-          <span className="shrink-0 rounded border border-accent/40 px-2 py-1 text-xs text-accent">
-            publicado ✓
-          </span>
-        ) : (
+    <details
+      open={abierto}
+      className="group rounded-lg border border-border bg-panel open:border-accent/40"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+        <span className="text-xs text-muted transition-transform group-open:rotate-90">▶</span>
+        <span className="font-medium">{titulo}</span>
+      </summary>
+      <div className="border-t border-border px-4 py-3">
+        <div className="flex items-start justify-between gap-4">
+          <p className="text-xs text-muted">{detalle}</p>
           <button
-            disabled={estado === 'publicando'}
             onClick={() => {
-              setEstado('publicando')
-              // MPPScan no expone API pública de submit: el registro real es un
-              // click en mppscan.com/register con esta URL. Acá simulamos el paso.
-              setTimeout(() => setEstado('publicado'), 1200)
-              window.open(
-                `https://www.mppscan.com/register?url=${encodeURIComponent(discoveryUrl)}`,
-                '_blank',
-              )
+              void navigator.clipboard.writeText(contenido)
+              setCopiado(true)
+              setTimeout(() => setCopiado(false), 1500)
             }}
-            className="shrink-0 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-black disabled:opacity-50"
+            className="shrink-0 text-xs text-accent hover:underline"
           >
-            {estado === 'publicando' ? 'Publicando…' : `Publicar ${slug}`}
+            {copiado ? 'copiado ✓' : 'copiar'}
           </button>
-        )}
+        </div>
+        <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-bg p-3 font-mono text-xs leading-relaxed">
+          {contenido}
+        </pre>
       </div>
-    </section>
+    </details>
   )
 }
 
@@ -99,5 +72,60 @@ export function BotonScore({ slug, label }: { slug: string; label: string }) {
       </button>
       {error ? <p className="text-xs text-red-400">{error}</p> : null}
     </div>
+  )
+}
+
+/** "Ya lo integré" → Peaje verifica bloque por bloque contra el dominio real. */
+export function VerificadorIntegracion({ slug }: { slug: string }) {
+  const [resultados, setResultados] = useState<ChequeoIntegracion[] | null>(null)
+  const [corriendo, setCorriendo] = useState(false)
+
+  const ok = resultados?.filter((r) => r.ok).length ?? 0
+
+  return (
+    <section className="rounded-lg border border-accent/40 bg-accent/5 p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-medium">¿Ya lo integraste?</h2>
+          <p className="mt-1 text-xs text-muted">
+            Verificamos tu dominio bloque por bloque: qué está publicado y qué falta.
+          </p>
+        </div>
+        <button
+          disabled={corriendo}
+          onClick={async () => {
+            setCorriendo(true)
+            try {
+              const { verificarIntegracion } = await import('./actions')
+              setResultados(await verificarIntegracion(slug))
+            } finally {
+              setCorriendo(false)
+            }
+          }}
+          className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
+        >
+          {corriendo ? 'Verificando…' : 'Verificar integración'}
+        </button>
+      </div>
+
+      {resultados ? (
+        <div className="mt-4">
+          <p className="text-xs text-muted">
+            {ok} de {resultados.length} bloques publicados
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {resultados.map((r) => (
+              <li key={r.id} className="flex items-center gap-2 text-sm">
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${r.ok ? 'bg-green-400' : 'bg-red-400'}`}
+                />
+                <span className={r.ok ? '' : 'text-muted'}>{r.label}</span>
+                <span className="text-xs text-muted">— {r.detalle}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
   )
 }

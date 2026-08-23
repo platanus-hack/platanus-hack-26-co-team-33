@@ -3,7 +3,7 @@ import { gatewayUrl } from '@/lib/config'
 import { cachedScore, checkStatus, scannableDomain } from '@/lib/ora'
 import { currentTenant } from '@/lib/session'
 import { store } from '@/lib/store'
-import { CopyBlock, PublicarMppscan } from './partes'
+import { ToggleBlock, VerificadorIntegracion } from './partes'
 
 export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   const { slug } = await params
@@ -50,46 +50,68 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   return (
     <div className="max-w-3xl space-y-8">
       <header>
-        <Link href={`/t/${tenant.slug}`} className="text-xs text-muted hover:text-text">
-          ← {tenant.name}
-        </Link>
-        <h1 className="mt-2 flex items-center gap-3 text-2xl font-medium">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/50 font-mono text-sm text-accent">
-            4
-          </span>
-          Haz que los agentes puedan encontrarte
-        </h1>
+        <h1 className="text-2xl font-medium">Haz que los agentes puedan encontrarte</h1>
         <p className="mt-2 text-sm text-muted">
-          Los bloques exactos para <strong>{originHost}</strong>, en el orden que más score suma
-          (medido con Ora, el auditor de agent-readiness). Aplícalos por partes, o todo de una con
-          el prompt.
+          Los bloques exactos para <strong>{originHost}</strong>, en el orden que más score suma.
+          Aplícalos por partes, o todo de una con el prompt.
         </p>
       </header>
 
-      <PublicarMppscan slug={tenant.slug} discoveryUrl={`${base}/openapi.json`} />
+      <VerificadorIntegracion slug={tenant.slug} />
+
+      <section className="rounded-lg border border-border bg-panel p-4">
+        <h2 className="font-medium">Ya activo, sin que hagas nada</h2>
+        <p className="mt-1 text-xs text-muted">
+          La capa Payments para Agentes (checks de MPP y x402) ya está cubierta.
+        </p>
+        <ul className="mt-3 grid grid-cols-3 gap-3 text-sm">
+          <li className="rounded-lg border border-border bg-bg p-3">
+            <p className="text-xs uppercase tracking-wide text-muted">Discovery</p>
+            <a
+              href={`${base}/openapi.json`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block truncate font-mono text-xs text-accent hover:underline"
+            >
+              /openapi.json
+            </a>
+          </li>
+          <li className="rounded-lg border border-border bg-bg p-3">
+            <p className="text-xs uppercase tracking-wide text-muted">llms.txt</p>
+            <a
+              href={`${base}/llms.txt`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block truncate font-mono text-xs text-accent hover:underline"
+            >
+              /llms.txt
+            </a>
+          </li>
+          <li className="rounded-lg border border-border bg-bg p-3">
+            <p className="text-xs uppercase tracking-wide text-muted">MCP</p>
+            <span className="mt-1 block truncate font-mono text-xs text-accent">/mcp</span>
+          </li>
+        </ul>
+      </section>
 
       <PromptTodoDeUna bloques={bloques} base={base} originHost={originHost} domain={domain} />
 
-      {bloques.map((b) => (
-        <CopyBlock key={b.titulo} titulo={b.titulo} detalle={b.detalle} contenido={b.contenido} />
-      ))}
+      <div className="space-y-3">
+        {bloques.map((b) => (
+          <ToggleBlock key={b.titulo} titulo={b.titulo} detalle={b.detalle} contenido={b.contenido} />
+        ))}
+      </div>
 
       <div className="rounded-lg border border-accent/40 bg-accent/5 p-4 text-sm">
         <p>
-          ¿Ya aplicaste el kit en tu web?{' '}
-          <Link href={`/t/${tenant.slug}#score-final`} className="text-accent underline">
-            Paso 5: vuelve a correr el score →
+          ¿Ya aplicaste el kit en tu web? Usa "Verificar integración" arriba, y después{' '}
+          <Link href={`/t/${tenant.slug}/score`} className="text-accent underline">
+            vuelve a correr el score →
           </Link>
         </p>
       </div>
 
-      <p className="text-xs text-muted">
-        Lo que ya sirve el gateway sin que hagas nada: discovery en{' '}
-        <code className="font-mono">{base}/openapi.json</code>, llms.txt en{' '}
-        <code className="font-mono">{base}/llms.txt</code> y MCP en{' '}
-        <code className="font-mono">{base}/mcp</code>. La capa Payments de Ora (checks de MPP y
-        x402) la cubre el gateway solo.
-      </p>
+
     </div>
   )
 }
@@ -232,15 +254,15 @@ ${bloques.map((b) => `## ${b.titulo}\n${b.detalle}\n\n\`\`\`\n${b.contenido}\n\`
 Al terminar, verifica:
 1. npx mppx@latest validate ${base}  (el flujo de pago, debe pasar todo)
 2. ${domain ? `npx @ora-ai/ax@0.4 audit ${domain}  (el score de agent-readiness, compara contra el anterior)` : 'cuando el sitio tenga dominio público: npx @ora-ai/ax@0.4 audit <dominio>'}
-3. Registra el servicio en https://www.mppscan.com/register con ${base}/openapi.json
 
 Referencia completa del estándar de auditoría: https://ora.ai/skill.md`
 
   return (
-    <CopyBlock
+    <ToggleBlock
       titulo="Todo de una · prompt para tu coding agent"
       detalle="Pégalo en Claude Code, Cursor o el agente que uses sobre el repo de tu sitio: aplica todos los bloques, valida el flujo de pago y re-corre el score."
       contenido={prompt}
+      abierto
     />
   )
 }
