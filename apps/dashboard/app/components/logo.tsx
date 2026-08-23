@@ -4,6 +4,15 @@ export function LogoMark({ className }: LogoMarkProps) {
   return (
     <svg viewBox="0 0 96 96" fill="none" aria-hidden="true" className={className}>
       <line
+        x1="18"
+        y1="72"
+        x2="42"
+        y2="72"
+        stroke="currentColor"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <line
         x1="30"
         y1="72"
         x2="30"
@@ -21,6 +30,7 @@ export function LogoMark({ className }: LogoMarkProps) {
         strokeWidth="10"
         strokeLinecap="round"
       />
+      <circle cx="30" cy="46" r="7" fill="currentColor" />
     </svg>
   )
 }
