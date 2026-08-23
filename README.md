@@ -14,13 +14,13 @@ Track: 🔑 Access · Team 33 · Platanus Hack 26 Bogotá
 
 ## Qué es
 
-Cualquier negocio con una URL registra su web con su email, le pone precio a sus links (o importa su sitemap), y obtiene un gateway que cobra por request a agentes de IA vía **MPP** (HTTP 402, el estándar de Tempo + Stripe). El agente paga solo en stablecoin (tarjetas vía Stripe en el roadmap del protocolo); el dueño ve el revenue entrar en su dashboard. Además, Peaje hace el sitio descubrible: score de agent-readiness (Ora), kit de archivos para agentes y MCP server con tools pagas por negocio. Sin código de pagos, sin tocar crypto en el onboarding.
+Cualquier negocio con una URL registra su web con su email, le pone precio a sus links (o importa su sitemap), y obtiene un gateway que cobra por request a agentes de IA vía **[MPP](https://mpp.dev/)** ([HTTP 402](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402), el estándar de pagos máquina-a-máquina de [Tempo](https://tempo.xyz/) + [Stripe](https://docs.stripe.com/payments/machine/mpp)). El agente paga solo en stablecoin (tarjetas vía Stripe en el roadmap del protocolo); el dueño ve el revenue entrar en su dashboard. Además, Peaje hace el sitio descubrible: score de agent-readiness ([Ora](https://ora.ai)), kit de archivos para agentes y MCP server con tools pagas por negocio. Sin código de pagos, sin tocar crypto en el onboarding.
 
 **Demo:** [peaje-dashboard.vercel.app](https://peaje-dashboard.vercel.app) · Gateway: `peaje-gateway.up.railway.app`
 
 ```bash
-# crea una wallet efímera, la fondea en testnet, y paga de verdad por cada
-# endpoint pago del tenant (ej. el clima de Bogotá a $0.02) — sin cuenta previa
+# actúa como un agente de IA: crea y financia sola una wallet de prueba, y
+# paga de verdad cada endpoint con precio del tenant (ej. clima de Bogotá a $0.02)
 npx mppx@latest validate https://peaje-gateway.up.railway.app/clima-andino
 ```
 
@@ -34,10 +34,15 @@ npx mppx@latest validate https://peaje-gateway.up.railway.app/clima-andino
                                  score Ora, precios · retiros: feature disponible pronto
 ```
 
+[Railway](https://railway.com/) y [Vercel](https://vercel.com/) son los hosts donde corre el
+demo — plataformas de hosting que despliegan la app directo desde el repo, sin servidor propio
+que mantener. El gateway corre en Railway (mejor para procesos Node de larga duración); el
+dashboard Next.js corre en Vercel (optimizado para ese framework).
+
 | Pieza | Qué hace |
 |---|---|
 | `apps/gateway` | Multi-tenant: `/{slug}/*` cobra por MPP y hace proxy. MCP con tools pagas en `/{slug}/mcp`. Discovery (`openapi.json`, `llms.txt`, `.well-known/*`) generado de la DB. Retiros desde la treasury — feature disponible pronto en el dashboard. |
-| `apps/dashboard` | Registro por email (Privy, wallet automática), score de agent-readiness (Ora) con previsión, links con precio + importar sitemap, kit agent-ready con verificador. |
+| `apps/dashboard` | Registro por email ([Privy](https://privy.io), wallet automática), score de agent-readiness ([Ora](https://ora.ai)) con previsión, links con precio + importar sitemap, kit agent-ready con verificador. |
 | `packages/db` | Esquema y stores (Supabase / memoria). |
 
 ## Correr local
