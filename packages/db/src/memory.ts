@@ -37,20 +37,24 @@ export class MemoryStore implements Store {
       id: this.#id('ten'),
       slug: input.slug,
       name: input.name,
-      apiKeyPrefix: input.apiKeyPrefix,
+      apiKeyPrefix: input.apiKeyPrefix ?? null,
       embedSecret: input.embedSecret,
       originUrl: input.originUrl,
       payoutWallet: input.payoutWallet ?? null,
+      email: input.email ?? null,
+      privyUserId: input.privyUserId ?? null,
       createdAt: new Date().toISOString(),
     }
     this.#tenants.set(tenant.id, tenant)
-    this.#hashes.set(input.apiKeyHash, tenant.id)
+    if (input.apiKeyHash) this.#hashes.set(input.apiKeyHash, tenant.id)
+    if (input.privyUserId) this.#privyUserIds.set(input.privyUserId, tenant.id)
     this.#routes.set(tenant.id, [])
     this.#origins.set(tenant.id, new Set())
     return tenant
   }
 
   #hashes = new Map<string, string>()
+  #privyUserIds = new Map<string, string>()
 
   async getTenantBySlug(slug: string) {
     return [...this.#tenants.values()].find((t) => t.slug === slug) ?? null
@@ -62,6 +66,11 @@ export class MemoryStore implements Store {
 
   async getTenantByApiKeyHash(hash: string) {
     const id = this.#hashes.get(hash)
+    return id ? (this.#tenants.get(id) ?? null) : null
+  }
+
+  async getTenantByPrivyUserId(privyUserId: string) {
+    const id = this.#privyUserIds.get(privyUserId)
     return id ? (this.#tenants.get(id) ?? null) : null
   }
 

@@ -1,16 +1,17 @@
 'use server'
 
-import { apiKeyPrefix, generateApiKey, generateEmbedSecret, hashApiKey, slugify } from '@peaje/shared'
-import { store } from '@/lib/store'
+import { generateEmbedSecret, slugify } from '@peaje/shared'
+import { createMerchantWallet, getPrivyUserEmail, verifyPrivyAccessToken } from '@/lib/privy'
 import { setSession } from '@/lib/session'
+import { store } from '@/lib/store'
 
 export type AltaResultado =
-  | { ok: true; slug: string; apiKey: string }
+  | { ok: true; slug: string; payoutWallet: string }
   | { ok: false; error: string }
 
 /**
- * Alta de un negocio. Devuelve el API key en claro una sola vez:
- * en la base solo queda el hash.
+ * Alta de un negocio: login por email vía Privy (OTP verificado en el
+ * cliente), wallet de payout creada automáticamente. Ya no hay API key.
  */
 export async function registrarNegocio(
   _previo: AltaResultado | null,
@@ -18,9 +19,11 @@ export async function registrarNegocio(
 ): Promise<AltaResultado> {
   const name = String(formData.get('name') ?? '').trim()
   const originUrl = String(formData.get('originUrl') ?? '').trim()
+  const accessToken = String(formData.get('privyAccessToken') ?? '').trim()
 
   if (!name) return { ok: false, error: 'Falta el nombre del negocio.' }
   if (!originUrl) return { ok: false, error: 'Falta la URL de tu API.' }
+  if (!accessToken) return { ok: false, error: 'Verifica tu email antes de continuar.' }
 
   let origin: URL
   try {
@@ -29,24 +32,40 @@ export async function registrarNegocio(
     return { ok: false, error: 'La URL de tu API no es válida. Incluí https://' }
   }
 
+  let privyUserId: string
+  try {
+    privyUserId = await verifyPrivyAccessToken(accessToken)
+  } catch {
+    return { ok: false, error: 'No pudimos verificar tu sesión. Intenta de nuevo.' }
+  }
+
+  const existente = await store.getTenantByPrivyUserId(privyUserId)
+  if (existente) {
+    await setSession(existente.id)
+    return { ok: true, slug: existente.slug, payoutWallet: existente.payoutWallet ?? '' }
+  }
+
   const slug = slugify(name)
   if (!slug) return { ok: false, error: 'El nombre no genera un identificador válido.' }
   if (await store.getTenantBySlug(slug)) {
     return { ok: false, error: `Ya hay un negocio registrado como "${slug}".` }
   }
 
-  const apiKey = generateApiKey()
+  const email = await getPrivyUserEmail(privyUserId)
+  const wallet = await createMerchantWallet(name)
+
   const tenant = await store.createTenant({
     slug,
     name,
     originUrl: origin.origin + origin.pathname.replace(/\/$/, ''),
-    apiKeyHash: await hashApiKey(apiKey),
-    apiKeyPrefix: apiKeyPrefix(apiKey),
     embedSecret: generateEmbedSecret(),
+    payoutWallet: wallet.address,
+    email,
+    privyUserId,
   })
 
   await store.addAllowedOrigin(tenant.id, origin.origin)
-  await setSession(apiKey)
+  await setSession(tenant.id)
 
-  return { ok: true, slug: tenant.slug, apiKey }
+  return { ok: true, slug: tenant.slug, payoutWallet: wallet.address }
 }
