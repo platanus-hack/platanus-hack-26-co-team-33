@@ -2,35 +2,35 @@ type LogoMarkProps = { className?: string }
 
 export function LogoMark({ className }: LogoMarkProps) {
   return (
-    <svg viewBox="10 16 68 64" fill="none" aria-hidden="true" className={className}>
+    <svg viewBox="10 3 50 81" fill="none" aria-hidden="true" className={className}>
       <line
         x1="18"
-        y1="72"
+        y1="76"
         x2="42"
-        y2="72"
+        y2="76"
         stroke="currentColor"
         strokeWidth="10"
         strokeLinecap="round"
       />
       <line
         x1="30"
-        y1="72"
+        y1="76"
         x2="30"
-        y2="46"
+        y2="42"
         stroke="currentColor"
         strokeWidth="10"
         strokeLinecap="round"
       />
       <line
         x1="30"
-        y1="46"
-        x2="70"
-        y2="24"
+        y1="42"
+        x2="52"
+        y2="11"
         stroke="currentColor"
         strokeWidth="10"
         strokeLinecap="round"
       />
-      <circle cx="30" cy="46" r="7" fill="currentColor" />
+      <circle cx="30" cy="42" r="8" fill="currentColor" />
     </svg>
   )
 }
