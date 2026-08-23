@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import Image from 'next/image'
 import Link from 'next/link'
 import { currentTenant } from '@/lib/session'
+import { Logo } from './components/logo'
 import './globals.css'
 import { Providers } from './providers'
 
@@ -24,18 +24,8 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
         <Providers>
           <header className="sticky top-4 z-40 mx-auto max-w-5xl px-6">
             <div className="flex items-center justify-between rounded-full border border-border bg-panel px-5 py-2.5 shadow-lg shadow-black/30">
-              <Link
-                href={tenant ? `/t/${tenant.slug}` : '/'}
-                className="flex items-center gap-2 font-mono text-sm tracking-tight text-text"
-              >
-                <Image
-                  src="/peaje_logo_barrera.PNG"
-                  alt=""
-                  width={22}
-                  height={22}
-                  className="rounded-md"
-                />
-                peaje
+              <Link href={tenant ? `/t/${tenant.slug}` : '/'} className="flex items-center">
+                <Logo />
               </Link>
               {tenant ? (
                 <nav className="flex items-center gap-3 text-sm">
