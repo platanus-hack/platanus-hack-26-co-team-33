@@ -164,11 +164,23 @@ app.get('/:slug/r/:rslug', async (c) => {
 
   if (result && result.status === 402) return result.challenge
 
-  const upstream = await fetch(resource.url, { redirect: 'follow' })
-  const headers = new Headers(upstream.headers)
-  headers.delete('content-encoding')
-  headers.delete('content-length')
-  const respuesta = new Response(upstream.body, { status: upstream.status, headers })
+  let respuesta: Response
+  try {
+    const upstream = await fetch(resource.url, { redirect: 'follow' })
+    const headers = new Headers(upstream.headers)
+    headers.delete('content-encoding')
+    headers.delete('content-length')
+    respuesta = new Response(upstream.body, { status: upstream.status, headers })
+  } catch (err) {
+    console.error('[gateway] no se pudo traer el recurso', { tenant: tenant.slug, resource: resource.slug, err })
+    respuesta = c.json(
+      {
+        error: 'No pudimos traer el recurso ya pagado.',
+        hint: 'Guarda el receipt de esta respuesta y contacta al negocio o a soporte.',
+      },
+      502,
+    )
+  }
   if (!result) return respuesta
   const sealed = result.withReceipt(respuesta)
 
@@ -229,7 +241,22 @@ app.all('/:slug/*', async (c) => {
 
   if (result.status === 402) return result.challenge
 
-  const upstream = await proxyToOrigin(c.req.raw, tenant, path)
+  // El pago ya se validó/liquidó arriba: si el origin falla de acá en más, el
+  // agente ya pagó. Sellamos el receipt igual (sobre una respuesta de error)
+  // para que el pago quede acreditado y el agente tenga con qué reclamar.
+  let upstream: Response
+  try {
+    upstream = await proxyToOrigin(c.req.raw, tenant, path)
+  } catch (err) {
+    console.error('[gateway] origin no respondió', { tenant: tenant.slug, path, err })
+    upstream = c.json(
+      {
+        error: 'El origin del negocio no respondió a esta request ya pagada.',
+        hint: 'Guarda el receipt de esta respuesta y contacta al negocio o a soporte.',
+      },
+      502,
+    )
+  }
   const sealed = result.withReceipt(upstream)
 
   await creditReceipt(sealed, {
