@@ -11,7 +11,7 @@ export default async function Kit({ params }: PageProps<'/t/[slug]/kit'>) {
   if (!tenant || tenant.slug !== slug) {
     return (
       <p className="text-sm text-muted">
-        Necesitás tu API key.{' '}
+        Necesitás iniciar sesión.{' '}
         <Link href="/acceder" className="text-accent underline">
           Entrar
         </Link>
