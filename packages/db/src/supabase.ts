@@ -24,6 +24,8 @@ function tenantFrom(row: Row): Tenant {
     embedSecret: row.embed_secret,
     originUrl: row.origin_url,
     payoutWallet: row.payout_wallet,
+    email: row.email,
+    privyUserId: row.privy_user_id,
     createdAt: row.created_at,
   }
 }
@@ -97,10 +99,12 @@ export class SupabaseStore implements Store {
         slug: input.slug,
         name: input.name,
         origin_url: input.originUrl,
-        api_key_hash: input.apiKeyHash,
-        api_key_prefix: input.apiKeyPrefix,
+        api_key_hash: input.apiKeyHash ?? null,
+        api_key_prefix: input.apiKeyPrefix ?? null,
         embed_secret: input.embedSecret,
         payout_wallet: input.payoutWallet ?? null,
+        email: input.email ?? null,
+        privy_user_id: input.privyUserId ?? null,
       })
       .select()
       .single()
@@ -117,6 +121,7 @@ export class SupabaseStore implements Store {
   getTenantBySlug = (slug: string) => this.#tenantWhere('slug', slug)
   getTenantById = (id: string) => this.#tenantWhere('id', id)
   getTenantByApiKeyHash = (hash: string) => this.#tenantWhere('api_key_hash', hash)
+  getTenantByPrivyUserId = (privyUserId: string) => this.#tenantWhere('privy_user_id', privyUserId)
 
   async listTenants(): Promise<Tenant[]> {
     const { data, error } = await this.#db

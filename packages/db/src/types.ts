@@ -2,10 +2,12 @@ export type Tenant = {
   id: string
   slug: string
   name: string
-  apiKeyPrefix: string
+  apiKeyPrefix: string | null
   embedSecret: string
   originUrl: string
   payoutWallet: string | null
+  email: string | null
+  privyUserId: string | null
   createdAt: string
 }
 
@@ -54,10 +56,12 @@ export type NewTenant = {
   slug: string
   name: string
   originUrl: string
-  apiKeyHash: string
-  apiKeyPrefix: string
   embedSecret: string
+  apiKeyHash?: string
+  apiKeyPrefix?: string
   payoutWallet?: string | null
+  email?: string | null
+  privyUserId?: string | null
 }
 
 export type Resource = {
@@ -93,6 +97,7 @@ export interface Store {
   getTenantBySlug(slug: string): Promise<Tenant | null>
   getTenantById(id: string): Promise<Tenant | null>
   getTenantByApiKeyHash(hash: string): Promise<Tenant | null>
+  getTenantByPrivyUserId(privyUserId: string): Promise<Tenant | null>
   listTenants(): Promise<Tenant[]>
   setPayoutWallet(tenantId: string, wallet: string): Promise<void>
 
