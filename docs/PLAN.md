@@ -67,8 +67,8 @@ Decisiones fijas:
 - [x] Balance disponible, requests pagados, revenue total, gráfica 7 días, tabla de últimos pagos
 - [x] Retiro: wallet destino → transferencia desde treasury → `withdrawals` con `tx_ref` → link al explorer
 - [x] Estados: pending → confirmed (polling del tx desde la UI cada 3 s)
-- Nota: el backend de retiros funciona, probado con transacciones reales, pero el botón en el
-  dashboard queda deshabilitado ("coming soon") hasta que se conecte la UI — ver Estado en el README.
+- Nota: el backend de retiros funciona, probado con transacciones reales — feature disponible
+  pronto en el dashboard, ver Estado en el README.
 
 ### M4 · MCP + descubrimiento — hecho
 

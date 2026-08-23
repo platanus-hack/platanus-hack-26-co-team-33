@@ -31,12 +31,12 @@ npx mppx@latest validate https://peaje-gateway.up.railway.app/clima-andino
                           │  402 → pago on-chain (Tempo) → receipt
                           └─ Ledger (Supabase) acredita por tenant
 [Dashboard Next.js · Vercel] ── onboarding por email (Privy, wallet automática),
-                                 score Ora, precios, retiros (backend listo, UI en camino)
+                                 score Ora, precios · retiros: feature disponible pronto
 ```
 
 | Pieza | Qué hace |
 |---|---|
-| `apps/gateway` | Multi-tenant: `/{slug}/*` cobra por MPP y hace proxy. MCP con tools pagas en `/{slug}/mcp`. Discovery (`openapi.json`, `llms.txt`, `.well-known/*`) generado de la DB. Retiros desde la treasury (API interna, sin UI todavía). |
+| `apps/gateway` | Multi-tenant: `/{slug}/*` cobra por MPP y hace proxy. MCP con tools pagas en `/{slug}/mcp`. Discovery (`openapi.json`, `llms.txt`, `.well-known/*`) generado de la DB. Retiros desde la treasury — feature disponible pronto en el dashboard. |
 | `apps/dashboard` | Registro por email (Privy, wallet automática), score de agent-readiness (Ora) con previsión, links con precio + importar sitemap, kit agent-ready con verificador. |
 | `packages/db` | Esquema y stores (Supabase / memoria). |
 
@@ -55,5 +55,5 @@ Probar el ciclo de pago: `npx mppx validate http://localhost:8787/<slug>`
 
 - `mppx validate` contra producción: 90 checks, 0 fallos
 - Pagos reales en Tempo testnet (pathUSD), verificables en [explore.testnet.tempo.xyz](https://explore.testnet.tempo.xyz)
-- Retiros: la API del gateway y la lógica de treasury ya funcionan (probado con transacciones reales); el botón del dashboard queda deshabilitado ("coming soon") hasta conectar la UI
+- Retiros: la API del gateway y la lógica de treasury ya funcionan, probado con transacciones reales — feature disponible pronto en el dashboard
 - Plan y specs en [docs/PLAN.md](./docs/PLAN.md)
