@@ -84,90 +84,97 @@ export default function NuevoNegocio() {
 
   if (step === 'code') {
     return (
-      <div className="max-w-md">
-        <h1 className="text-2xl font-medium">Revisa tu email</h1>
-        <p className="mt-2 text-sm text-muted">
-          Te mandamos un código a <span className="text-text">{email}</span>.
-        </p>
-        <form onSubmit={verificarYCrear} className="mt-6 space-y-4">
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-            placeholder="123456"
-            className="w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
-          />
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
-          >
-            {pending ? 'Verificando…' : 'Verificar y crear gateway'}
-          </button>
-        </form>
+      <div className="flex min-h-[65vh] items-center justify-center">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-medium">Revisa tu email</h1>
+          <p className="mt-2 text-sm text-muted">
+            Te mandamos un código a <span className="text-text">{email}</span>.
+          </p>
+          <form onSubmit={verificarYCrear} className="mt-6 space-y-4">
+            <label className="block">
+              <span className="text-xs tracking-wide text-muted uppercase">Código</span>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                placeholder="123456"
+                className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
+              />
+            </label>
+            {error ? <p className="text-sm text-red-400">{error}</p> : null}
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
+            >
+              {pending ? 'Verificando…' : 'Verificar y crear gateway'}
+            </button>
+          </form>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-lg">
-      <h1 className="text-2xl font-medium">Registra tu negocio</h1>
-      <p className="mt-2 text-sm text-muted">
-        Con tu email creamos tu wallet de cobro automáticamente. Nada de API keys para copiar.
-      </p>
+    <div className="flex min-h-[65vh] items-center justify-center">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-medium">Registra tu negocio</h1>
+        <p className="mt-2 text-sm text-muted">
+          Con tu email creamos tu wallet de cobro automáticamente. Nada de API keys para copiar.
+        </p>
 
-      <form onSubmit={enviarCodigo} className="mt-8 space-y-5">
-        <label className="block">
-          <span className="text-sm text-muted">Nombre del negocio</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            placeholder="Clima Andino"
-            className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
-          />
-        </label>
+        <form onSubmit={enviarCodigo} className="mt-8 space-y-5">
+          <label className="block">
+            <span className="text-xs tracking-wide text-muted uppercase">Nombre del negocio</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Clima Andino"
+              className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
+            />
+          </label>
 
-        <label className="block">
-          <span className="text-sm text-muted">URL de tu sitio web</span>
-          <input
-            value={originUrl}
-            onChange={(e) => setOriginUrl(e.target.value)}
-            required
-            placeholder="https://tunegocio.com"
-            className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
-          />
-          <span className="mt-1.5 block text-xs text-muted">
-            Tu web de siempre. Peaje le pone el cobro delante, no la cambia.
-          </span>
-        </label>
+          <label className="block">
+            <span className="text-xs tracking-wide text-muted uppercase">URL de tu sitio web</span>
+            <input
+              value={originUrl}
+              onChange={(e) => setOriginUrl(e.target.value)}
+              required
+              placeholder="https://tunegocio.com"
+              className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
+            />
+            <span className="mt-1.5 block text-xs text-muted">
+              Tu web de siempre. Peaje le pone el cobro delante, no la cambia.
+            </span>
+          </label>
 
-        <label className="block">
-          <span className="text-sm text-muted">Tu email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="tu@tunegocio.com"
-            className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
-          />
-          <span className="mt-1.5 block text-xs text-muted">
-            Ahí te mandamos el código para entrar. También es donde cae tu identidad de cobro.
-          </span>
-        </label>
+          <label className="block">
+            <span className="text-xs tracking-wide text-muted uppercase">Tu email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="tu@tunegocio.com"
+              className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
+            />
+            <span className="mt-1.5 block text-xs text-muted">
+              Ahí te mandamos el código para entrar. También es donde cae tu identidad de cobro.
+            </span>
+          </label>
 
-        {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
-        >
-          {pending ? 'Enviando código…' : 'Enviar código'}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-50"
+          >
+            {pending ? 'Enviando código…' : 'Enviar código'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
