@@ -2,7 +2,7 @@ type LogoMarkProps = { className?: string }
 
 export function LogoMark({ className }: LogoMarkProps) {
   return (
-    <svg viewBox="0 0 96 96" fill="none" aria-hidden="true" className={className}>
+    <svg viewBox="10 16 68 64" fill="none" aria-hidden="true" className={className}>
       <line
         x1="18"
         y1="72"
@@ -37,7 +37,7 @@ export function LogoMark({ className }: LogoMarkProps) {
 
 export function Logo({ className }: LogoMarkProps) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
+    <span className={`inline-flex items-center gap-1 ${className ?? ''}`}>
       <LogoMark className="h-4 w-4 text-accent" />
       <span className="font-mono text-sm tracking-tight text-text">peaje</span>
     </span>
