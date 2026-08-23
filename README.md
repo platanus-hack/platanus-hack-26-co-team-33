@@ -19,8 +19,6 @@ Cualquier negocio con una URL registra su web con su email, le pone precio a sus
 **Demo:** [peaje-dashboard.vercel.app](https://peaje-dashboard.vercel.app) · Gateway: `peaje-gateway.up.railway.app`
 
 ```bash
-# actúa como un agente de IA: crea y financia sola una wallet de prueba, y
-# paga de verdad cada endpoint con precio del tenant (ej. clima de Bogotá a $0.02)
 npx mppx@latest validate https://peaje-gateway.up.railway.app/clima-andino
 ```
 

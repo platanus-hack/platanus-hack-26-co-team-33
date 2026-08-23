@@ -31,8 +31,6 @@ Gateway multi-tenant en Hono + SDK `mppx` (Railway) · Dashboard Next.js (Vercel
 ## Pruébalo
 
 ```bash
-# crea una wallet efímera, la fondea en testnet, y paga de verdad por el
-# pronóstico de Bogotá a través de Peaje — sin cuenta previa
 npx mppx@latest validate https://peaje-gateway.up.railway.app/clima-andino
 ```
 
