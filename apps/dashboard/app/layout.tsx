@@ -21,31 +21,37 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="es">
       <body className={`${sans.variable} ${mono.variable} antialiased`}>
         <Providers>
-          <header className="border-b border-border">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <header className="sticky top-4 z-40 mx-auto max-w-5xl px-6">
+            <div className="flex items-center justify-between rounded-full border border-border bg-panel px-5 py-2.5 shadow-lg shadow-black/30">
               <Link
                 href={tenant ? `/t/${tenant.slug}` : '/'}
-                className="font-mono text-sm tracking-tight"
+                className="font-mono text-sm tracking-tight text-text"
               >
                 peaje
               </Link>
               {tenant ? (
-                <nav className="flex items-center gap-4 text-sm">
+                <nav className="flex items-center gap-3 text-sm">
                   <span className="text-muted">{tenant.email ?? tenant.name}</span>
                   <Link
                     href="/salir"
                     prefetch={false}
-                    className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted hover:text-text"
+                    className="rounded-full border border-border px-4 py-1.5 text-xs text-muted hover:border-muted hover:text-text"
                   >
                     Salir
                   </Link>
                 </nav>
               ) : (
-                <nav className="flex gap-5 text-sm text-muted">
-                  <Link href="/nuevo" className="hover:text-text">
+                <nav className="flex items-center gap-3 text-sm">
+                  <Link
+                    href="/nuevo"
+                    className="rounded-full bg-text px-4 py-1.5 font-medium text-bg"
+                  >
                     Registrar negocio
                   </Link>
-                  <Link href="/acceder" className="hover:text-text">
+                  <Link
+                    href="/acceder"
+                    className="rounded-full border border-border px-4 py-1.5 text-muted hover:border-muted hover:text-text"
+                  >
                     Entrar
                   </Link>
                 </nav>
@@ -54,6 +60,20 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           </header>
           <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
         </Providers>
+        <footer className="mx-auto max-w-5xl px-6 py-10">
+          <p className="text-center text-xs text-muted">
+            Made with love by{' '}
+            <a
+              href="https://github.com/platanus-hack/platanus-hack-26-co-team-33"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-border underline-offset-2 hover:text-text"
+            >
+              Team 33
+            </a>{' '}
+            at Platanus Hack Bogotá 26
+          </p>
+        </footer>
       </body>
     </html>
   )
