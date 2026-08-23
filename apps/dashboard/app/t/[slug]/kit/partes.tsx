@@ -120,7 +120,7 @@ export function VerificadorIntegracion({ slug }: { slug: string }) {
                   className={`h-1.5 w-1.5 shrink-0 rounded-full ${r.ok ? 'bg-green-400' : 'bg-red-400'}`}
                 />
                 <span className={r.ok ? '' : 'text-muted'}>{r.label}</span>
-                <span className="text-xs text-muted">— {r.detalle}</span>
+                <span className="text-xs text-muted">· {r.detalle}</span>
               </li>
             ))}
           </ul>

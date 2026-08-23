@@ -124,7 +124,7 @@ export default function NuevoNegocio() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            placeholder="DataLatam"
+            placeholder="Clima Andino"
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
           />
         </label>

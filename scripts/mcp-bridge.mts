@@ -6,8 +6,8 @@
  * agente. Claude ve tools normales; los pagos pasan por debajo.
  *
  * Registro en Claude Code:
- *   claude mcp add datalatam -e AGENT_PRIVATE_KEY=0x... -- \
- *     pnpm exec tsx scripts/mcp-bridge.mts http://localhost:8787/datalatam/mcp
+ *   claude mcp add clima-andino -e AGENT_PRIVATE_KEY=0x... -- \
+ *     pnpm exec tsx scripts/mcp-bridge.mts http://localhost:8787/clima-andino/mcp
  */
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'

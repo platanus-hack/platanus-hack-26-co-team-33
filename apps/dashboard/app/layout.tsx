@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import Image from 'next/image'
 import Link from 'next/link'
 import { currentTenant } from '@/lib/session'
 import './globals.css'
@@ -25,8 +26,15 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
             <div className="flex items-center justify-between rounded-full border border-border bg-panel px-5 py-2.5 shadow-lg shadow-black/30">
               <Link
                 href={tenant ? `/t/${tenant.slug}` : '/'}
-                className="font-mono text-sm tracking-tight text-text"
+                className="flex items-center gap-2 font-mono text-sm tracking-tight text-text"
               >
+                <Image
+                  src="/peaje_logo_barrera.PNG"
+                  alt=""
+                  width={22}
+                  height={22}
+                  className="rounded-md"
+                />
                 peaje
               </Link>
               {tenant ? (

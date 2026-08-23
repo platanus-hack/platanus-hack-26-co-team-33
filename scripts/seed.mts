@@ -9,26 +9,6 @@ const store = getStore()
 
 const seeds = [
   {
-    slug: 'datalatam',
-    name: 'DataLatam',
-    originUrl: process.env.DATALATAM_ORIGIN ?? 'http://localhost:3001',
-    origins: ['http://localhost:3001'],
-    routes: [
-      {
-        method: 'GET',
-        pathPattern: '/api/indicadores/:pais',
-        priceUsd: '0.05',
-        description: 'Indicadores macro por país',
-      },
-      {
-        method: 'GET',
-        pathPattern: '/api/empresas/:nit',
-        priceUsd: '0.15',
-        description: 'Ficha de empresa por NIT',
-      },
-    ],
-  },
-  {
     slug: 'demo',
     name: 'Demo',
     originUrl: 'https://picsum.photos',
