@@ -22,6 +22,10 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="es">
       <body className={`${sans.variable} ${mono.variable} antialiased`}>
         <Providers>
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 top-0 z-30 h-24 bg-gradient-to-b from-bg via-bg/90 to-transparent"
+          />
           <header className="sticky top-4 z-40 mx-auto max-w-5xl px-6">
             <div className="flex items-center justify-between rounded-full border border-border bg-panel px-5 py-2.5 shadow-lg shadow-black/30">
               <Link href={tenant ? `/t/${tenant.slug}` : '/'} className="flex items-center">
@@ -56,9 +60,13 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
               )}
             </div>
           </header>
-          <main className="mx-auto max-w-5xl px-6 pt-10 pb-24">{children}</main>
+          <main className="mx-auto max-w-5xl px-6 pt-10 pb-28">{children}</main>
         </Providers>
-        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg px-6 py-4">
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-24 bg-gradient-to-t from-bg via-bg/90 to-transparent"
+        />
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg px-6 py-6">
           <p className="mx-auto max-w-5xl text-center text-xs text-muted">
             Made with love by{' '}
             <a
