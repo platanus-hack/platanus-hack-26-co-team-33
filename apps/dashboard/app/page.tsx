@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { currentTenant } from '@/lib/session'
 
 const TICKER_ITEMS = ['Protocolo MPP', 'Pagos vía HTTP 402', 'Sin API key para agentes']
 
@@ -17,7 +18,9 @@ function TickerRow() {
   )
 }
 
-export default function Landing() {
+export default async function Landing() {
+  const tenant = await currentTenant()
+
   return (
     <div className="space-y-20 py-8">
       <section className="grid gap-14 lg:grid-cols-[1.05fr_1fr] lg:items-center">
@@ -32,18 +35,29 @@ export default function Landing() {
             que hable el protocolo ya puede pagarte.
           </p>
           <div className="mt-8 flex items-center gap-6">
-            <Link
-              href="/nuevo"
-              className="rounded-full bg-text px-5 py-3 text-sm font-medium text-bg"
-            >
-              Registrar mi negocio
-            </Link>
-            <Link
-              href="/acceder"
-              className="inline-flex items-center gap-1.5 border-b border-current pb-0.5 text-sm font-medium text-muted hover:text-text"
-            >
-              Ya tengo cuenta <span aria-hidden>→</span>
-            </Link>
+            {tenant ? (
+              <Link
+                href={`/t/${tenant.slug}`}
+                className="rounded-full bg-text px-5 py-3 text-sm font-medium text-bg"
+              >
+                Ir a mi dashboard →
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/nuevo"
+                  className="rounded-full bg-text px-5 py-3 text-sm font-medium text-bg"
+                >
+                  Registrar mi negocio
+                </Link>
+                <Link
+                  href="/acceder"
+                  className="inline-flex items-center gap-1.5 border-b border-current pb-0.5 text-sm font-medium text-muted hover:text-text"
+                >
+                  Ya tengo cuenta <span aria-hidden>→</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import Image from 'next/image'
 import Link from 'next/link'
 import { currentTenant } from '@/lib/session'
+import { Logo } from './components/logo'
 import './globals.css'
 import { Providers } from './providers'
 
@@ -22,20 +22,14 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="es">
       <body className={`${sans.variable} ${mono.variable} antialiased`}>
         <Providers>
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 top-0 z-30 h-24 bg-gradient-to-b from-bg via-bg/90 to-transparent"
+          />
           <header className="sticky top-4 z-40 mx-auto max-w-5xl px-6">
             <div className="flex items-center justify-between rounded-full border border-border bg-panel px-5 py-2.5 shadow-lg shadow-black/30">
-              <Link
-                href={tenant ? `/t/${tenant.slug}` : '/'}
-                className="flex items-center gap-2 font-mono text-sm tracking-tight text-text"
-              >
-                <Image
-                  src="/peaje_logo_barrera.PNG"
-                  alt=""
-                  width={22}
-                  height={22}
-                  className="rounded-md"
-                />
-                peaje
+              <Link href={tenant ? `/t/${tenant.slug}` : '/'} className="flex items-center">
+                <Logo />
               </Link>
               {tenant ? (
                 <nav className="flex items-center gap-3 text-sm">
@@ -66,10 +60,14 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
               )}
             </div>
           </header>
-          <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+          <main className="mx-auto max-w-5xl px-6 pt-10 pb-28">{children}</main>
         </Providers>
-        <footer className="mx-auto max-w-5xl px-6 py-10">
-          <p className="text-center text-xs text-muted">
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-24 bg-gradient-to-t from-bg via-bg/90 to-transparent"
+        />
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg px-6 py-6">
+          <p className="mx-auto max-w-5xl text-center text-xs text-muted">
             Made with love by{' '}
             <a
               href="https://github.com/platanus-hack/platanus-hack-26-co-team-33"

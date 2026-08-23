@@ -15,45 +15,64 @@ export function RetirosPanel({
   historial: Withdrawal[]
 }) {
   const [comingSoon, setComingSoon] = useState(false)
+  const [copiado, setCopiado] = useState(false)
   const puedeRetirar = Number(disponible) > 0 && Boolean(wallet)
+
+  async function copiarWallet() {
+    if (!wallet) return
+    await navigator.clipboard.writeText(wallet)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 1500)
+  }
 
   return (
     <section>
-      <h2 className="text-lg font-medium">Retirar</h2>
-      <p className="mt-1 text-sm text-muted">
-        {wallet
-          ? `Enviamos el saldo disponible a ${shortWallet(wallet)}.`
-          : 'Configura primero tu wallet de retiro aquí abajo.'}
-      </p>
+      <div className="rounded-lg border border-accent/40 bg-accent/5 p-5">
+        <p className="text-xs tracking-wide text-accent uppercase">Saldo disponible</p>
+        <p className="mt-3 text-3xl font-medium tabular-nums">{money(disponible)}</p>
 
-      <div className="mt-3 flex items-center gap-3">
-        <input
-          name="amount"
-          type="number"
-          step="0.000001"
-          min="0"
-          placeholder={disponible}
-          disabled
-          className="w-36 rounded-lg border border-border bg-panel px-3 py-2 font-mono text-sm outline-none focus:border-accent disabled:opacity-40"
-        />
+        {wallet ? (
+          <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+            <span className="text-xs text-muted">
+              Cuenta: <span className="font-mono">{shortWallet(wallet)}</span>
+            </span>
+            <button
+              type="button"
+              onClick={copiarWallet}
+              className="text-xs text-accent hover:underline"
+            >
+              {copiado ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+        ) : (
+          <p className="mt-5 border-t border-border pt-4 text-xs text-muted">
+            Configura tu wallet de retiro aquí abajo para poder retirar.
+          </p>
+        )}
+
         <button
+          type="button"
           disabled={!puedeRetirar}
           onClick={() => setComingSoon(true)}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black disabled:opacity-40"
+          className="mt-4 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black disabled:opacity-40"
         >
-          Retirar {money(disponible)}
+          Retirar
         </button>
-        <span className="text-xs text-muted">Vacío = todo el saldo</span>
-      </div>
 
-      {comingSoon ? (
-        <div className="mt-3 flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/5 p-3 text-sm">
-          <span>Los retiros llegan pronto. Tu saldo sigue seguro y acumulándose.</span>
-          <button onClick={() => setComingSoon(false)} className="ml-auto text-xs text-muted hover:text-text">
-            Cerrar
-          </button>
-        </div>
-      ) : null}
+        {comingSoon ? (
+          <div className="mt-3 flex items-center gap-3 rounded-lg border border-border bg-panel p-3 text-sm">
+            <span className="text-muted">
+              Los retiros llegan pronto. Tu saldo sigue seguro y acumulándose.
+            </span>
+            <button
+              onClick={() => setComingSoon(false)}
+              className="ml-auto text-xs text-muted hover:text-text"
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       {historial.length > 0 ? (
         <ul className="mt-5 space-y-1.5">

@@ -4,13 +4,26 @@ import { useState, useTransition } from 'react'
 import { guardarWallet } from './actions'
 
 export function WalletForm({ slug, wallet }: { slug: string; wallet: string | null }) {
+  const [abierto, setAbierto] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
+  if (!abierto) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAbierto(true)}
+        className="text-xs text-muted hover:text-text hover:underline"
+      >
+        Cambiar wallet de retiro
+      </button>
+    )
+  }
+
   return (
     <section>
-      <h2 className="text-lg font-medium">Wallet de retiro</h2>
-      <p className="mt-1 text-sm text-muted">
+      <h2 className="text-sm font-medium">Wallet de retiro</h2>
+      <p className="mt-1 text-xs text-muted">
         A dónde te enviamos el dinero cuando retiras. Puedes cambiarla cuando quieras.
       </p>
       <form

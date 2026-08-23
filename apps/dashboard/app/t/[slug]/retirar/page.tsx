@@ -15,16 +15,16 @@ export default async function Retirar({ params }: PageProps<'/t/[slug]/retirar'>
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-medium">Retirar</h1>
-        <p className="mt-2 text-sm text-muted">
-          Tu saldo disponible sale de la treasury a tu wallet, on-chain.
-        </p>
+        <p className="mt-2 text-sm text-muted">Tu saldo disponible, listo para retirar.</p>
       </header>
-      <RetirosPanel
-        disponible={balance.available}
-        wallet={tenant.payoutWallet}
-        historial={retiros}
-      />
-      <WalletForm slug={tenant.slug} wallet={tenant.payoutWallet} />
+      <div className="space-y-3">
+        <RetirosPanel
+          disponible={balance.available}
+          wallet={tenant.payoutWallet}
+          historial={retiros}
+        />
+        <WalletForm slug={tenant.slug} wallet={tenant.payoutWallet} />
+      </div>
     </div>
   )
 }
