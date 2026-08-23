@@ -203,25 +203,10 @@ function Listo({ slug, payoutWallet }: { slug: string; payoutWallet: string }) {
             <p className="text-xs tracking-wide text-accent uppercase">Tu saldo</p>
             <p className="mt-3 text-3xl font-medium tabular-nums">$0.00</p>
 
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                disabled
-                className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted disabled:opacity-50"
-              >
-                Enviar
-              </button>
-              <button
-                type="button"
-                disabled
-                className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted disabled:opacity-50"
-              >
-                Recibir
-              </button>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-              <span className="font-mono text-xs text-muted">{acortarWallet(payoutWallet)}</span>
+            <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+              <span className="text-xs text-muted">
+                Cuenta: <span className="font-mono">{acortarWallet(payoutWallet)}</span>
+              </span>
               <button
                 type="button"
                 onClick={copiarWallet}
