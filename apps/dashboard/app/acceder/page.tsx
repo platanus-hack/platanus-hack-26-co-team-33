@@ -102,7 +102,7 @@ export default function Acceder() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          placeholder="vos@tunegocio.com"
+          placeholder="tu@tunegocio.com"
           className="w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
         />
         {error ? <p className="text-sm text-red-400">{error}</p> : null}

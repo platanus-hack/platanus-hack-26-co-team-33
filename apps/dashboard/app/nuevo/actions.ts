@@ -22,14 +22,14 @@ export async function registrarNegocio(
   const accessToken = String(formData.get('privyAccessToken') ?? '').trim()
 
   if (!name) return { ok: false, error: 'Falta el nombre del negocio.' }
-  if (!originUrl) return { ok: false, error: 'Falta la URL de tu API.' }
+  if (!originUrl) return { ok: false, error: 'Falta la URL de tu sitio web.' }
   if (!accessToken) return { ok: false, error: 'Verifica tu email antes de continuar.' }
 
   let origin: URL
   try {
     origin = new URL(originUrl)
   } catch {
-    return { ok: false, error: 'La URL de tu API no es válida. Incluí https://' }
+    return { ok: false, error: 'Esa URL no parece válida. Ejemplo: https://tunegocio.com' }
   }
 
   let privyUserId: string

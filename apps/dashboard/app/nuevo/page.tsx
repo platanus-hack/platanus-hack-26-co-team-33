@@ -8,6 +8,21 @@ import { registrarNegocio, type AltaResultado } from './actions'
 
 type Step = 'form' | 'code'
 
+/** Acepta "tunegocio.com" o "https://tunegocio.com"; devuelve la URL normalizada o null. */
+function normalizarUrl(raw: string): string | null {
+  const value = raw.trim()
+  if (!value) return null
+  const conEsquema = value.includes('://') ? value : `https://${value}`
+  try {
+    const url = new URL(conEsquema)
+    if (!['http:', 'https:'].includes(url.protocol)) return null
+    if (!url.hostname.includes('.')) return null
+    return url.toString().replace(/\/$/, '')
+  } catch {
+    return null
+  }
+}
+
 export default function NuevoNegocio() {
   const [step, setStep] = useState<Step>('form')
   const [name, setName] = useState('')
@@ -25,7 +40,9 @@ export default function NuevoNegocio() {
     e.preventDefault()
     setError(null)
     if (!name.trim()) return setError('Falta el nombre del negocio.')
-    if (!originUrl.trim()) return setError('Falta la URL de tu API.')
+    const url = normalizarUrl(originUrl)
+    if (!url) return setError('Esa URL no parece valida. Ejemplo: https://tunegocio.com')
+    setOriginUrl(url)
     if (!email.trim()) return setError('Falta tu email.')
     setPending(true)
     try {
@@ -48,7 +65,7 @@ export default function NuevoNegocio() {
       if (!accessToken) throw new Error('sin token')
       const formData = new FormData()
       formData.set('name', name)
-      formData.set('originUrl', originUrl)
+      formData.set('originUrl', normalizarUrl(originUrl) ?? originUrl)
       formData.set('privyAccessToken', accessToken)
       const r = await registrarNegocio(null, formData)
       if (!r.ok) {
@@ -133,7 +150,7 @@ export default function NuevoNegocio() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="vos@tunegocio.com"
+            placeholder="tu@tunegocio.com"
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 text-sm outline-none focus:border-accent"
           />
           <span className="mt-1.5 block text-xs text-muted">
@@ -165,17 +182,17 @@ function Listo({ slug, payoutWallet }: { slug: string; payoutWallet: string }) {
         <p className="text-xs uppercase tracking-wide text-accent">Tu wallet de cobro</p>
         <code className="mt-2 block break-all font-mono text-sm">{payoutWallet}</code>
         <p className="mt-2 text-xs text-muted">
-          Privy la creó y la custodia. Ahí cae la plata de cada compra.
+          Ahí recibirás los pagos de los agentes.
         </p>
       </div>
 
       <div className="mt-6 space-y-3 text-sm">
-        <p className="text-muted">Los agentes te consumen por aquí:</p>
+        <p className="text-muted">Los agentes consumen tu website por aquí:</p>
         <code className="block break-all rounded-lg border border-border bg-panel p-3 font-mono text-sm">
           {base}/&lt;tu-ruta&gt;
         </code>
         <p className="text-muted">
-          Nada cobra todavía. El siguiente paso es ver tu score y ponerle precio a tus links.
+          En este momento no tienes rutas. Comienza el onboarding para crearlas.
         </p>
       </div>
 
