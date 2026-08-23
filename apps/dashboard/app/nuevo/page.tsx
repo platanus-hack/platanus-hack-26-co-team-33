@@ -179,38 +179,81 @@ export default function NuevoNegocio() {
   )
 }
 
+function acortarWallet(address: string) {
+  return `${address.slice(0, 6)}…${address.slice(-6)}`
+}
+
 function Listo({ slug, payoutWallet }: { slug: string; payoutWallet: string }) {
   const base = `${gatewayUrl}/${slug}`
+  const [copiado, setCopiado] = useState(false)
+
+  async function copiarWallet() {
+    await navigator.clipboard.writeText(payoutWallet)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 1500)
+  }
+
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-medium">Listo. Tu gateway está arriba.</h1>
+    <div className="flex min-h-[65vh] items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="text-2xl font-medium">Listo. Tu gateway está arriba.</h1>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-accent/40 bg-accent/5 p-5">
-          <p className="text-xs tracking-wide text-accent uppercase">Wallet embebida</p>
-          <p className="mt-3 text-3xl font-medium tabular-nums">$0.00</p>
-          <p className="mt-2 font-mono text-xs break-all text-muted">{payoutWallet}</p>
-          <p className="mt-3 text-xs text-muted">Acá vas a recibir los pagos de los agentes.</p>
+        <div className="mt-6 space-y-4">
+          <div className="rounded-lg border border-accent/40 bg-accent/5 p-5">
+            <p className="text-xs tracking-wide text-accent uppercase">Tu saldo</p>
+            <p className="mt-3 text-3xl font-medium tabular-nums">$0.00</p>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                disabled
+                className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted disabled:opacity-50"
+              >
+                Enviar
+              </button>
+              <button
+                type="button"
+                disabled
+                className="flex-1 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted disabled:opacity-50"
+              >
+                Recibir
+              </button>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+              <span className="font-mono text-xs text-muted">{acortarWallet(payoutWallet)}</span>
+              <button
+                type="button"
+                onClick={copiarWallet}
+                className="text-xs text-accent hover:underline"
+              >
+                {copiado ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-muted">Acá vas a recibir los pagos de los agentes.</p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-panel p-5">
+            <p className="text-xs tracking-wide text-muted uppercase">Endpoint</p>
+            <code className="mt-3 block break-all font-mono text-sm text-text">
+              {base}/&lt;tu-ruta&gt;
+            </code>
+            <p className="mt-3 text-xs text-muted">Los agentes consumen tu website por aquí.</p>
+          </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-panel p-5">
-          <p className="text-xs tracking-wide text-muted uppercase">Endpoint</p>
-          <code className="mt-3 block break-all font-mono text-sm text-text">
-            {base}/&lt;tu-ruta&gt;
-          </code>
-          <p className="mt-3 text-xs text-muted">
-            Los agentes consumen tu website por aquí. Todavía no tienes rutas: comienza el
-            onboarding para crearlas.
-          </p>
-        </div>
+        <p className="mt-4 text-xs text-muted">
+          Todavía no tienes rutas. Comienza el onboarding para crearlas.
+        </p>
+
+        <Link
+          href={`/t/${slug}/score`}
+          className="mt-6 inline-block rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black"
+        >
+          Empezar: mira tu score →
+        </Link>
       </div>
-
-      <Link
-        href={`/t/${slug}/score`}
-        className="mt-8 inline-block rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black"
-      >
-        Empezar: mira tu score →
-      </Link>
     </div>
   )
 }
