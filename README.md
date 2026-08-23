@@ -3,7 +3,7 @@
 **Ponle un peaje a tu web y haz que los agentes de IA te descubran, te usen y te paguen.**
 
 <p align="center">
-  <img src="./docs/screenshot-home.png" alt="Peaje" width="640" />
+  <img src="./project-logo.png" alt="Peaje" width="140" />
 </p>
 
 Track: 🔑 Access · Team 33 · Platanus Hack 26 Bogotá
