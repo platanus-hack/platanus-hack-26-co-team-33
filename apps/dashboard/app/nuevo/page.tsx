@@ -33,15 +33,15 @@ export default function NuevoNegocio() {
         </label>
 
         <label className="block">
-          <span className="text-sm text-muted">URL de tu API</span>
+          <span className="text-sm text-muted">URL de tu sitio web</span>
           <input
             name="originUrl"
             required
-            placeholder="https://api.tunegocio.com"
+            placeholder="https://tunegocio.com"
             className="mt-1.5 w-full rounded-lg border border-border bg-panel px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
           />
           <span className="mt-1.5 block text-xs text-muted">
-            Es la API que ya tienes corriendo. Peaje la envuelve, no la reemplaza.
+            Tu web de siempre. Peaje le pone el cobro delante, no la cambia.
           </span>
         </label>
 
@@ -78,21 +78,20 @@ function Listo({ slug, apiKey }: { slug: string; apiKey: string }) {
       </div>
 
       <div className="mt-6 space-y-3 text-sm">
-        <p className="text-muted">Tu API ahora se consume por aquí:</p>
+        <p className="text-muted">Los agentes te consumen por aquí:</p>
         <code className="block break-all rounded-lg border border-border bg-panel p-3 font-mono text-sm">
           {base}/&lt;tu-ruta&gt;
         </code>
         <p className="text-muted">
-          Nada cobra todavía. Define qué rutas tienen precio y el gateway empieza a responder 402 a
-          los agentes.
+          Nada cobra todavía. El siguiente paso es ver tu score y ponerle precio a tus links.
         </p>
       </div>
 
       <Link
-        href={`/t/${slug}`}
+        href={`/t/${slug}/score`}
         className="mt-8 inline-block rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-black"
       >
-        Ir al panel
+        Empezar: mira tu score →
       </Link>
     </div>
   )

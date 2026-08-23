@@ -3,20 +3,48 @@ import { txExplorerUrl } from '@peaje/shared'
 import { gatewayUrl, money, shortWallet } from '@/lib/config'
 import { requireTenant } from '@/lib/session'
 import { store } from '@/lib/store'
+import { cachedScore, prevision, scannableDomain } from '@/lib/ora'
 import { GraficaRevenue } from './grafica'
+import { SetupChecklist } from './setup'
 
 export default async function Dashboard({ params }: PageProps<'/t/[slug]'>) {
   const { slug } = await params
   const tenant = await requireTenant(slug)
 
-  const [balance, payments, porDia, resources] = await Promise.all([
+  const domain = scannableDomain(tenant.originUrl)
+  const [balance, payments, porDia, resources, score] = await Promise.all([
     store.balance(tenant.id),
     store.listPayments(tenant.id, 10),
     store.dailyRevenue(tenant.id, 7),
     store.listResources(tenant.id).catch(() => []),
+    domain ? cachedScore(domain) : Promise.resolve(null),
   ])
 
   const base = `${gatewayUrl}/${tenant.slug}`
+  const kitAplicado = score !== null && prevision(score).arreglables.length === 0
+  const pasos = [
+    {
+      n: 1,
+      titulo: 'Mira tu score',
+      descripcion: 'Qué tan listo está tu sitio para agentes, y a cuánto llega con Peaje.',
+      href: `/t/${tenant.slug}/score`,
+      hecho: domain === null || score !== null,
+    },
+    {
+      n: 2,
+      titulo: 'Ponle precio a tus links',
+      descripcion: 'Agrega links o importa tu sitemap. Los agentes pagan por request.',
+      href: `/t/${tenant.slug}/rutas`,
+      hecho: resources.length > 0,
+    },
+    {
+      n: 3,
+      titulo: 'Haz que te encuentren',
+      descripcion: 'Aplica el kit en tu web y verifica la integración.',
+      href: `/t/${tenant.slug}/kit`,
+      hecho: kitAplicado,
+    },
+  ]
 
   return (
     <div className="space-y-8">
@@ -26,6 +54,8 @@ export default async function Dashboard({ params }: PageProps<'/t/[slug]'>) {
           Los agentes consumen por <code className="font-mono text-text">{base}</code>
         </p>
       </header>
+
+      <SetupChecklist pasos={pasos} />
 
       <div className="grid grid-cols-3 gap-4">
         <Metric label="Disponible" value={money(balance.available)} destacado />

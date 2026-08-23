@@ -79,13 +79,13 @@ importers:
       hono:
         specifier: ^4.9.0
         version: 4.13.3
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.12
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
-      tsx:
-        specifier: ^4.20.0
-        version: 4.23.12
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -110,6 +110,9 @@ importers:
       mppx:
         specifier: ^0.8.19
         version: 0.8.19(@modelcontextprotocol/sdk@1.30.0(zod@4.4.3))(express@5.2.1)(hono@4.13.3)(typescript@5.9.3)(viem@2.55.19(typescript@5.9.3)(zod@4.4.3))
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.12
       viem:
         specifier: ^2.44.0
         version: 2.55.19(typescript@5.9.3)(zod@4.4.3)
@@ -120,9 +123,6 @@ importers:
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
-      tsx:
-        specifier: ^4.20.0
-        version: 4.23.12
       typescript:
         specifier: ^5.9.0
         version: 5.9.3

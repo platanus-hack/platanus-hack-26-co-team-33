@@ -45,7 +45,7 @@ app.get('/:slug/openapi.json', async (c) => {
       })),
     })
   // Los paths van sin el slug; la base la declara `servers`, como manda OpenAPI.
-  doc.servers = [{ url: `${new URL(c.req.url).origin}/${tenant.slug}` }]
+  doc.servers = [{ url: `${env.publicUrl}/${tenant.slug}` }]
   return c.json(doc)
 })
 
@@ -69,7 +69,7 @@ app.get('/_internal/:slug/ledger', async (c) => {
 app.use('/:slug/*', async (c, next) => {
   await next()
   const slug = c.req.param('slug')
-  const origin = new URL(c.req.url).origin
+  const origin = env.publicUrl
   c.res.headers.append(
     'Link',
     `<${origin}/${slug}/llms.txt>; rel="describedby", <${origin}/${slug}/.well-known/ai-catalog.json>; rel="ai-catalog", <${origin}/${slug}/openapi.json>; rel="service-desc"`,
@@ -112,7 +112,7 @@ for (const [path, def] of Object.entries(WELL_KNOWN)) {
     const tenant = await store.getTenantBySlug(c.req.param('slug'))
     if (!tenant) return c.json({ error: 'Tenant no encontrado' }, 404)
     const routes = await sellableRoutes(tenant.id)
-    const base = `${new URL(c.req.url).origin}/${tenant.slug}`
+    const base = `${env.publicUrl}/${tenant.slug}`
     const body = def.builder({ tenant, routes, base })
     return typeof body === 'string'
       ? c.text(body, 200, { 'content-type': def.contentType })
@@ -129,7 +129,7 @@ app.get('/:slug/llms.txt', async (c) => {
   const tenant = await store.getTenantBySlug(c.req.param('slug'))
   if (!tenant) return c.text('Tenant no encontrado', 404)
   const routes = await sellableRoutes(tenant.id)
-  const base = `${new URL(c.req.url).origin}/${tenant.slug}`
+  const base = `${env.publicUrl}/${tenant.slug}`
   return c.text(wk.llmsTxt({ tenant, routes, base }), 200, {
     'content-type': 'text/markdown; charset=utf-8',
   })
